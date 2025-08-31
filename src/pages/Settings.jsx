@@ -5,11 +5,15 @@ import {
   Database,
   Building,
   Download,
-  Upload
+  Upload,
+  Clock
 } from 'lucide-react';
 import { DatabaseService } from '../services/database';
+import { BackupService } from '../services/backupService';
+import { useToastContext } from '../components/Toast';
 
 const Settings = () => {
+  const { toast } = useToastContext();
   const [activeTab, setActiveTab] = useState('company');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -24,6 +28,8 @@ const Settings = () => {
   });
   const [successMessage, setSuccessMessage] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [backupHistory, setBackupHistory] = useState([]);
 
   const tabs = [
     { id: 'company', name: 'Şirket Bilgileri', icon: Building },
@@ -43,7 +49,13 @@ const Settings = () => {
   // Sayfa yüklendiğinde ayarları getir
   useEffect(() => {
     loadCompanySettings();
+    loadBackupHistory();
   }, []);
+
+  const loadBackupHistory = () => {
+    const history = BackupService.getBackupHistory();
+    setBackupHistory(history);
+  };
 
   const loadCompanySettings = async () => {
     try {
@@ -197,7 +209,75 @@ const Settings = () => {
     }
   };
 
+  // Tam sistem yedeği indirme
+  const handleFullBackup = async () => {
+    try {
+      setBackupLoading(true);
+      if (toast) toast.info('Tam sistem yedeği oluşturuluyor...');
 
+      const result = await BackupService.createFullBackup();
+      
+      if (result.success) {
+        // Dosyayı indir
+        BackupService.downloadBackup(result.data, result.filename);
+        
+        // Geçmişe ekle
+        BackupService.addToBackupHistory({
+          type: 'full',
+          filename: result.filename,
+          size: `${(JSON.stringify(result.data).length / (1024 * 1024)).toFixed(2)} MB`,
+          records_count: result.data.metadata.total_records
+        });
+        
+        // Geçmişi yenile
+        loadBackupHistory();
+        
+        if (toast) toast.success('Tam sistem yedeği başarıyla indirildi!');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('❌ Yedekleme hatası:', error);
+      if (toast) toast.error(`Yedekleme hatası: ${error.message}`);
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
+  // Sadece veritabanı yedeği indirme
+  const handleDatabaseBackup = async () => {
+    try {
+      setBackupLoading(true);
+      if (toast) toast.info('Veritabanı yedeği oluşturuluyor...');
+
+      const result = await BackupService.createDatabaseBackup();
+      
+      if (result.success) {
+        // SQL dosyasını indir
+        BackupService.downloadBackup(result.data, result.filename, 'application/sql');
+        
+        // Geçmişe ekle
+        BackupService.addToBackupHistory({
+          type: 'database',
+          filename: result.filename,
+          size: `${(result.data.length / (1024 * 1024)).toFixed(2)} MB`,
+          records_count: 'SQL Export'
+        });
+        
+        // Geçmişi yenile
+        loadBackupHistory();
+        
+        if (toast) toast.success('Veritabanı yedeği başarıyla indirildi!');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('❌ Veritabanı yedekleme hatası:', error);
+      if (toast) toast.error(`Veritabanı yedekleme hatası: ${error.message}`);
+    } finally {
+      setBackupLoading(false);
+    }
+  };
 
   const renderCompanyTab = () => (
     <div className="space-y-6">
@@ -403,65 +483,71 @@ const Settings = () => {
   const renderBackupTab = () => (
     <div className="space-y-6">
       <div className="card">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Veri Yedekleme</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Manuel Yedekleme</h3>
+        <p className="text-sm text-gray-600 mb-6">Sistem verilerinizi güvenli bir şekilde yedekleyin ve indirin.</p>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Otomatik Yedekleme</h4>
-            <p className="text-sm text-gray-500 mb-4">Verileriniz güvenli bir şekilde yedeklenir</p>
-            <div className="flex items-center space-x-3">
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-              <span className="text-sm text-gray-700">Etkin</span>
-            </div>
+          <div className="border border-gray-200 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-gray-900 mb-2">Tam Sistem Yedeği</h4>
+            <p className="text-xs text-gray-500 mb-4">Tüm veriler JSON formatında</p>
+            <button 
+              onClick={handleFullBackup}
+              disabled={backupLoading}
+              className="btn-primary flex items-center w-full justify-center disabled:opacity-50"
+            >
+              <Download size={16} className="mr-2" />
+              {backupLoading ? 'Oluşturuluyor...' : 'Tam Yedek İndir'}
+            </button>
           </div>
           
-          <div>
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Yedekleme Sıklığı</h4>
-            <select className="input-field">
-              <option value="daily">Günlük</option>
-              <option value="weekly" selected>Haftalık</option>
-              <option value="monthly">Aylık</option>
-            </select>
+          <div className="border border-gray-200 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-gray-900 mb-2">Veritabanı Yedeği</h4>
+            <p className="text-xs text-gray-500 mb-4">Sadece veriler SQL formatında</p>
+            <button 
+              onClick={handleDatabaseBackup}
+              disabled={backupLoading}
+              className="btn-secondary flex items-center w-full justify-center disabled:opacity-50"
+            >
+              <Database size={16} className="mr-2" />
+              {backupLoading ? 'Oluşturuluyor...' : 'DB Yedek İndir'}
+            </button>
           </div>
-        </div>
-        
-        <div className="mt-6 flex items-center space-x-4">
-          <button className="btn-primary flex items-center">
-            <Download size={16} className="mr-2" />
-            Manuel Yedek İndir
-          </button>
-          <button className="btn-secondary flex items-center">
-            <Upload size={16} className="mr-2" />
-            Yedek Geri Yükle
-          </button>
         </div>
       </div>
 
       <div className="card">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Son Yedeklemeler</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div>
-              <p className="text-sm font-medium text-gray-900">Tam Sistem Yedeği</p>
-              <p className="text-xs text-gray-500">15 Ocak 2024, 02:00 • 2.4 GB</p>
-            </div>
-            <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-              İndir
-            </button>
+        {backupHistory.length > 0 ? (
+          <div className="space-y-3">
+            {backupHistory.map((backup) => (
+              <div key={backup.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {backup.type === 'full' ? '🗂️ Tam Sistem Yedeği' : '🗃️ Veritabanı Yedeği'}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    <Clock size={12} className="inline mr-1" />
+                    {new Date(backup.created_at).toLocaleString('tr-TR')} • {backup.size}
+                    {backup.records_count && typeof backup.records_count === 'number' && (
+                      <span> • {backup.records_count} kayıt</span>
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                    Tamamlandı
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-          
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div>
-              <p className="text-sm font-medium text-gray-900">Veritabanı Yedeği</p>
-              <p className="text-xs text-gray-500">8 Ocak 2024, 02:00 • 156 MB</p>
-            </div>
-            <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-              İndir
-            </button>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <Database size={48} className="mx-auto mb-4 text-gray-300" />
+            <p>Henüz yedekleme yapılmadı</p>
+            <p className="text-sm">Yukarıdaki butonları kullanarak yedek oluşturun</p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
