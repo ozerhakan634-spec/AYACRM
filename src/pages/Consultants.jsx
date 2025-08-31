@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useToastContext } from '../components/Toast';
 import { 
   Plus, 
   Search, 
@@ -15,6 +16,7 @@ import {
 import { DatabaseService } from '../services/database';
 
 const Consultants = () => {
+  const { toast } = useToastContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
   const [selectedConsultant, setSelectedConsultant] = useState(null);
@@ -106,7 +108,7 @@ const Consultants = () => {
       setIsEditModalOpen(true);
     } else {
       console.error('Geçersiz danışman verisi:', consultant);
-      alert('Danışman bilgileri yüklenemedi. Lütfen tekrar deneyin.');
+      if (toast) toast.error('Danışman bilgileri yüklenemedi', 'Hata');
     }
   };
 
@@ -146,11 +148,11 @@ const Consultants = () => {
       if (updatedConsultantData) {
         // Başarılı güncelleme sonrası danışman listesini güncelle
         await loadConsultants();
-        alert('Danışman başarıyla güncellendi!');
+        if (toast) toast.success('Danışman başarıyla güncellendi!', 'Başarılı');
       }
     } catch (error) {
       console.error('Danışman güncellenirken hata:', error);
-      alert('Danışman güncellenirken hata oluştu: ' + error.message);
+      if (toast) toast.error('Danışman güncellenirken hata oluştu', 'Hata');
     }
     
     handleCloseEditModal();
@@ -179,11 +181,11 @@ const Consultants = () => {
       if (createdConsultant) {
         // Başarılı ekleme sonrası danışman listesini güncelle
         await loadConsultants();
-        alert('Danışman başarıyla eklendi!');
+        if (toast) toast.success('Danışman başarıyla eklendi!', 'Başarılı');
       }
     } catch (error) {
       console.error('Danışman eklenirken hata:', error);
-      alert('Danışman eklenirken hata oluştu: ' + error.message);
+      if (toast) toast.error('Danışman eklenirken hata oluştu', 'Hata');
     }
     
     handleCloseAddModal();
@@ -201,10 +203,10 @@ const Consultants = () => {
         
         // Başarılı silme sonrası danışman listesini güncelle
         await loadConsultants();
-        alert('Danışman başarıyla silindi!');
+        if (toast) toast.success('Danışman başarıyla silindi!', 'Başarılı');
       } catch (error) {
         console.error('Danışman silinirken hata:', error);
-        alert('Danışman silinirken hata oluştu: ' + error.message);
+        if (toast) toast.error('Danışman silinirken hata oluştu', 'Hata');
       }
     }
     setDeleteModal({ isOpen: false, consultant: null });
@@ -229,7 +231,7 @@ const Consultants = () => {
       // Müşteri bilgilerini bul
       const client = clients.find(c => c.id === clientId);
       if (!client) {
-        alert('Müşteri bulunamadı!');
+        if (toast) toast.warning('Müşteri bulunamadı', 'Uyarı');
         return;
       }
 
@@ -243,7 +245,7 @@ const Consultants = () => {
       
       if (updatedClient) {
         // Başarı mesajı göster
-        alert(`✅ ${assignmentModal.consultant.name} danışmanı ${client.name || client.full_name} müşterisine başarıyla atandı!`);
+        if (toast) toast.success(`${assignmentModal.consultant.name} danışmanı başarıyla atandı`, 'Atama Başarılı');
         
         // Modal'ı kapat
         handleCloseAssignmentModal();
@@ -256,7 +258,7 @@ const Consultants = () => {
       
     } catch (error) {
       console.error('❌ Danışman atama hatası:', error);
-      alert('❌ Danışman atanırken hata oluştu: ' + error.message);
+      if (toast) toast.error('Danışman atanırken hata oluştu', 'Hata');
     }
   };
 
@@ -265,13 +267,13 @@ const Consultants = () => {
       const updatedClient = await DatabaseService.removeConsultantFromClient(clientId);
 
       if (updatedClient) {
-        alert(`✅ Danışman ataması ${updatedClient.name || updatedClient.full_name} müşterisinden başarıyla kaldırıldı!`);
+        if (toast) toast.success('Danışman ataması başarıyla kaldırıldı', 'Başarılı');
         await loadClients();
         console.log('✅ Danışman ataması kaldırıldı ve müşteri listesi yenilendi');
       }
     } catch (error) {
       console.error('❌ Danışman ataması kaldırılırken hata:', error);
-      alert('❌ Danışman ataması kaldırılırken hata oluştu: ' + error.message);
+      if (toast) toast.error('Danışman ataması kaldırılırken hata oluştu', 'Hata');
     }
   };
 
@@ -284,12 +286,12 @@ const Consultants = () => {
       const updatedConsultant = await DatabaseService.updateConsultant(consultant.id, consultantData);
 
       if (updatedConsultant) {
-        alert(`Danışman durumu başarıyla ${updatedStatus === 'active' ? 'Aktif' : 'Pasif'} yapıldı.`);
+        if (toast) toast.success(`Danışman durumu ${updatedStatus === 'active' ? 'Aktif' : 'Pasif'} yapıldı`, 'Durum Güncellendi');
         await loadConsultants(); // Veritabanındaki durumu güncelle
       }
     } catch (error) {
       console.error('Danışman durumu güncellenirken hata:', error);
-      alert('Danışman durumu güncellenirken hata oluştu: ' + error.message);
+      if (toast) toast.error('Danışman durumu güncellenirken hata oluştu', 'Hata');
     }
   };
 
