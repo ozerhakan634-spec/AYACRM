@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ToastProvider } from './components/Toast';
 import { AITrainingService } from './services/aiTrainingService';
+import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Clients from './pages/Clients';
@@ -73,11 +74,14 @@ function App() {
     <ToastProvider>
       <Router>
         <Routes>
+          {/* Landing Page Route */}
+          <Route path="/" element={<LandingPage />} />
+          
           {/* Login Route */}
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           
           {/* Protected Routes */}
-          <Route path="/*" element={
+          <Route path="/dashboard/*" element={
             <ProtectedRoute>
               <Layout currentUser={currentUser} onLogout={handleLogout} onUserUpdate={handleUserUpdate}>
                 <Routes>
@@ -87,61 +91,61 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/clients" element={
+                <Route path="clients" element={
                   <ProtectedRoute requiredPermission="clients">
                     <Clients />
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/documents" element={
+                <Route path="documents" element={
                   <ProtectedRoute requiredPermission="documents">
                     <Documents />
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/tasks" element={
+                <Route path="tasks" element={
                   <ProtectedRoute requiredPermission="tasks">
                     <Tasks />
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/calendar" element={
+                <Route path="calendar" element={
                   <ProtectedRoute requiredPermission="calendar">
                     <Calendar />
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/reports" element={
+                <Route path="reports" element={
                   <ProtectedRoute requiredPermission="reports">
                     <Reports />
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/consultants" element={
+                <Route path="consultants" element={
                   <ProtectedRoute requiredPermission="consultants">
                     <Consultants />
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/finance" element={
+                <Route path="finance" element={
                   <ProtectedRoute requiredPermission="finance">
                     <Finance />
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/team-management" element={
+                <Route path="team-management" element={
                   <ProtectedRoute requiredPermission="consultants">
                     <TeamManagement />
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/settings" element={
+                <Route path="settings" element={
                   <ProtectedRoute requiredPermission="settings">
                     <Settings />
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/chatbot" element={
+                <Route path="chatbot" element={
                   <ProtectedRoute requiredPermission="chatbot">
                     <ChatBot />
                   </ProtectedRoute>

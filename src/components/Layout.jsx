@@ -35,16 +35,16 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
   const navigate = useNavigate();
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Müşteriler', href: '/clients', icon: Users },
-    { name: 'Belgeler', href: '/documents', icon: FolderOpen },
-    { name: 'Görevlerim', href: '/tasks', icon: CheckSquare },
-    { name: 'Takvim', href: '/calendar', icon: Calendar },
-    { name: 'Raporlar', href: '/reports', icon: BarChart3 },
-    { name: 'Finans', href: '/finance', icon: DollarSign },
-    { name: 'Danışmanlar', href: '/consultants', icon: Users },
-    { name: 'Takım Yönetimi', href: '/team-management', icon: UserCog },
-    { name: 'AI Asistanı', href: '/chatbot', icon: MessageCircle },
+    { name: 'Dashboard', href: '/dashboard', icon: Home },
+    { name: 'Müşteriler', href: '/dashboard/clients', icon: Users },
+    { name: 'Belgeler', href: '/dashboard/documents', icon: FolderOpen },
+    { name: 'Görevlerim', href: '/dashboard/tasks', icon: CheckSquare },
+    { name: 'Takvim', href: '/dashboard/calendar', icon: Calendar },
+    { name: 'Raporlar', href: '/dashboard/reports', icon: BarChart3 },
+    { name: 'Finans', href: '/dashboard/finance', icon: DollarSign },
+    { name: 'Danışmanlar', href: '/dashboard/consultants', icon: Users },
+    { name: 'Takım Yönetimi', href: '/dashboard/team-management', icon: UserCog },
+    { name: 'AI Asistanı', href: '/dashboard/chatbot', icon: MessageCircle },
   ];
 
   // Sadece izni olan menüleri göster
@@ -318,7 +318,7 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
           {/* Ayarlar Butonu */}
           {currentUser?.permissions?.settings && (
             <Link
-              to="/settings"
+              to="/dashboard/settings"
               className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
                 location.pathname === '/settings'
                   ? 'bg-gray-100 text-gray-800'
