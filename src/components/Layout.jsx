@@ -52,25 +52,25 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
     if (!currentUser || !currentUser.permissions) return false;
     
     switch (item.href) {
-      case '/':
+      case '/dashboard':
         return currentUser.permissions.dashboard;
-      case '/clients':
+      case '/dashboard/clients':
         return currentUser.permissions.clients;
-      case '/documents':
+      case '/dashboard/documents':
         return currentUser.permissions.documents;
-      case '/tasks':
+      case '/dashboard/tasks':
         return currentUser.permissions.tasks; // Görevlerim için tasks izni gerekli
-      case '/calendar':
+      case '/dashboard/calendar':
         return currentUser.permissions.calendar;
-      case '/reports':
+      case '/dashboard/reports':
         return currentUser.permissions.reports;
-      case '/finance':
+      case '/dashboard/finance':
         return currentUser.permissions.finance;
-      case '/consultants':
+      case '/dashboard/consultants':
         return currentUser.permissions.consultants;
-      case '/team-management':
+      case '/dashboard/team-management':
         return currentUser.permissions.consultants;
-      case '/chatbot':
+      case '/dashboard/chatbot':
         return currentUser.permissions.chatbot; // AI Asistanı için chatbot izni gerekli
       default:
         return false;
@@ -320,7 +320,7 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
             <Link
               to="/dashboard/settings"
               className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                location.pathname === '/settings'
+                location.pathname === '/dashboard/settings'
                   ? 'bg-gray-100 text-gray-800'
                   : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
               }`}
@@ -328,7 +328,7 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
               <Settings 
                 size={20} 
                 className={`mr-3 ${
-                  location.pathname === '/settings' ? 'text-gray-600' : 'text-gray-400 group-hover:text-gray-500'
+                  location.pathname === '/dashboard/settings' ? 'text-gray-600' : 'text-gray-400 group-hover:text-gray-500'
                 }`}
               />
               Ayarlar
@@ -402,7 +402,7 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
                             onClick={() => {
                               console.log('🔗 GÖREV KARTINA TIKLANDI!');
                               setShowNotifications(false);
-                              navigate('/tasks');
+                              navigate('/dashboard/tasks');
                             }}
                             style={{ pointerEvents: 'auto' }}
                           >
@@ -438,7 +438,7 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
                           onClick={() => {
                             console.log('🔗 TÜM GÖREVLER BUTONUNA TIKLANDI!');
                             setShowNotifications(false);
-                            navigate('/tasks');
+                            navigate('/dashboard/tasks');
                           }}
                           className="text-sm text-blue-600 hover:text-blue-800 font-medium w-full text-left"
                           style={{ pointerEvents: 'auto' }}
