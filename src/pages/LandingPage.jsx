@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronUp } from 'lucide-react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
 
   // Component mount olduğunda animasyon kontrol et
   useEffect(() => {
@@ -27,6 +30,17 @@ const LandingPage = () => {
     }
   }, []);
 
+  // Scroll event listener ekle
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      setShowScrollTop(scrollY > 300); // 300px'den fazla scroll edildiğinde göster
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleLogin = () => {
     // Glass wave'leri form şekline morph et
     const glassLayers = document.querySelectorAll('.glass-wave-layer');
@@ -48,6 +62,12 @@ const LandingPage = () => {
     // Scroll to features section
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+
 
   useEffect(() => {
     let scrollTimeout;
@@ -370,6 +390,19 @@ const LandingPage = () => {
         </div>
       </div>
       </div>
+
+              {/* Scroll to Top Button */}
+        <button
+          onClick={handleScrollToTop}
+          className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/10 backdrop-blur-md border border-white/20 text-white p-3 rounded-full shadow-lg hover:bg-white/20 hover:border-white/30 transition-all duration-300 ${
+            showScrollTop 
+              ? 'opacity-100 scale-100' 
+              : 'opacity-0 scale-75 pointer-events-none'
+          }`}
+          title="Yukarı Çık"
+        >
+          <ChevronUp className="h-5 w-5" />
+        </button>
     </div>
   );
 };
