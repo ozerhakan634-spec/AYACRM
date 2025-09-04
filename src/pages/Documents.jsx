@@ -167,9 +167,10 @@ const Documents = () => {
 
   // Filtreleme ve arama
   const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = (doc.name && doc.name.toLowerCase().includes(searchLower)) ||
+                         (doc.clientName && doc.clientName.toLowerCase().includes(searchLower)) ||
+                         (doc.description && doc.description.toLowerCase().includes(searchLower));
     const matchesType = selectedType === 'all' || doc.type === selectedType;
     const matchesStatus = selectedStatus === 'all' || doc.status === selectedStatus;
     return matchesSearch && matchesType && matchesStatus;
@@ -178,22 +179,22 @@ const Documents = () => {
   // Dosya arama filtreleme
   const filteredFiles = documentsWithClients.filter(doc => {
     const searchLower = fileSearchTerm.toLowerCase();
-    return doc.originalFileName?.toLowerCase().includes(searchLower) ||
-           doc.fileName?.toLowerCase().includes(searchLower) ||
-           doc.name?.toLowerCase().includes(searchLower) ||
-           doc.clients?.name?.toLowerCase().includes(searchLower) ||
-           doc.clientName?.toLowerCase().includes(searchLower) ||
-           doc.clients?.email?.toLowerCase().includes(searchLower);
+    return (doc.originalFileName && doc.originalFileName.toLowerCase().includes(searchLower)) ||
+           (doc.fileName && doc.fileName.toLowerCase().includes(searchLower)) ||
+           (doc.name && doc.name.toLowerCase().includes(searchLower)) ||
+           (doc.clients && doc.clients.name && doc.clients.name.toLowerCase().includes(searchLower)) ||
+           (doc.clientName && doc.clientName.toLowerCase().includes(searchLower)) ||
+           (doc.clients && doc.clients.email && doc.clients.email.toLowerCase().includes(searchLower));
   });
 
   const filteredClients = clients
     .filter(client => {
       const searchLower = searchTerm.toLowerCase();
-      return client.name?.toLowerCase().includes(searchLower) ||
-             client.email?.toLowerCase().includes(searchLower) ||
-             client.country?.toLowerCase().includes(searchLower) ||
-             (client.visa_type || client.visaType || '')?.toLowerCase().includes(searchLower) ||
-             (client.application_number || client.applicationNumber || '')?.toLowerCase().includes(searchLower);
+      return (client.name && client.name.toLowerCase().includes(searchLower)) ||
+             (client.email && client.email.toLowerCase().includes(searchLower)) ||
+             (client.country && client.country.toLowerCase().includes(searchLower)) ||
+             ((client.visa_type || client.visaType || '') && (client.visa_type || client.visaType || '').toLowerCase().includes(searchLower)) ||
+             ((client.application_number || client.applicationNumber || '') && (client.application_number || client.applicationNumber || '').toLowerCase().includes(searchLower));
     })
     .sort((a, b) => {
       // Bugünün tarihini burada tanımla (tüm case'lerde kullanılabilir)
@@ -324,9 +325,9 @@ const Documents = () => {
               description: savedDocument.description,
               fileName: savedDocument.originalFileName,
               fileSize: savedDocument.fileSize + ' MB',
-              fileType: savedDocument.fileType.includes('pdf') ? 'PDF' : 
-                        savedDocument.fileType.includes('jpeg') || savedDocument.fileType.includes('jpg') ? 'JPEG' : 
-                        savedDocument.fileType.includes('png') ? 'PNG' : 'DOC',
+                          fileType: savedDocument.fileType && savedDocument.fileType.includes('pdf') ? 'PDF' : 
+                      savedDocument.fileType && (savedDocument.fileType.includes('jpeg') || savedDocument.fileType.includes('jpg')) ? 'JPEG' : 
+                      savedDocument.fileType && savedDocument.fileType.includes('png') ? 'PNG' : 'DOC',
               status: savedDocument.status,
               uploadDate: savedDocument.uploadedDate,
               clientId: savedDocument.clientId
