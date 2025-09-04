@@ -1,15 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1); // 1, 2, 3 sayfaları
   const [showScrollTop, setShowScrollTop] = useState(false);
+  
+  // Form state'leri
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null); // 'success' | 'error' | null
 
 
   // Component mount olduğunda animasyon kontrol et
   useEffect(() => {
+    // EmailJS'i initialize et
+    emailjs.init('Jq8gMoFG7ScUDnTw9'); // EmailJS Public Key
+    
     // Eğer login'den geliyorsak glass wave'leri reverse morph yap
     if (window.previousPath === '/login') {
       const glassLayers = document.querySelectorAll('.glass-wave-layer');
@@ -67,79 +81,132 @@ const LandingPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Form handlers
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!formData.name || !formData.email || !formData.phone || !formData.message) {
+      setSubmitStatus('error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      const templateParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        from_phone: formData.phone,
+        message: formData.message,
+        admin_email: 'ozerhakan634@gmail.com' // Sizin e-posta adresiniz
+      };
+
+      const result = await emailjs.send(
+        'service_4gf3bpt', // EmailJS Service ID
+        'template_tw5abv6', // EmailJS Template ID
+        templateParams,
+        'Jq8gMoFG7ScUDnTw9' // EmailJS Public Key
+      );
+
+      if (result.status === 200) {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', phone: '', message: '' });
+      } else {
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      console.error('E-posta gönderme hatası:', error);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
 
   useEffect(() => {
     let scrollTimeout;
     let isScrolling = false;
+    let lastWheelTime = 0;
     
     const handleScroll = (e) => {
-      if (isScrolling) return;
+      // Scroll event'ini sadece izle, müdahale etme
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
       
-      e.preventDefault();
-      
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        const scrollY = window.scrollY;
-        const windowHeight = window.innerHeight;
-        
-        isScrolling = true;
-        
-        // Eğer scroll pozisyonu yarıdan fazlaysa aşağı git, yoksa yukarı git
-        if (scrollY > windowHeight / 2) {
-          // Features bölümüne git
-          document.getElementById('features')?.scrollIntoView({ 
-            behavior: 'smooth',
-            block: 'start'
-          });
-          setIsScrolled(true);
-        } else {
-          // Ana sayfaya git
-          window.scrollTo({ 
-            top: 0, 
-            behavior: 'smooth' 
-          });
-          setIsScrolled(false);
-        }
-        
-        // Scroll bitince flag'i sıfırla
-        setTimeout(() => {
-          isScrolling = false;
-        }, 1000);
-      }, 50);
+      // Sayfa pozisyonunu güncelle
+      if (scrollY < windowHeight * 0.5) {
+        setCurrentPage(1);
+      } else if (scrollY < windowHeight * 1.5) {
+        setCurrentPage(2);
+      } else {
+        setCurrentPage(3);
+      }
     };
 
-    // Mouse wheel eventi
+    // Mouse wheel eventi - daha kontrollü
     const handleWheel = (e) => {
-      if (isScrolling) {
+      const now = Date.now();
+      if (isScrolling || now - lastWheelTime < 500) {
         e.preventDefault();
         return;
       }
       
-      e.preventDefault();
+      lastWheelTime = now;
+      isScrolling = true;
       
-      if (e.deltaY > 0 && !isScrolled) {
-        // Aşağı scroll - Features'a git
-        isScrolling = true;
-        document.getElementById('features')?.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-        setIsScrolled(true);
-        setTimeout(() => { isScrolling = false; }, 1000);
-      } else if (e.deltaY < 0 && isScrolled) {
-        // Yukarı scroll - Ana sayfaya git
-        isScrolling = true;
-        window.scrollTo({ 
-          top: 0, 
-          behavior: 'smooth' 
-        });
-        setIsScrolled(false);
-        setTimeout(() => { isScrolling = false; }, 1000);
+      if (e.deltaY > 0) {
+        // Aşağı scroll
+        if (currentPage === 1) {
+          e.preventDefault();
+          document.getElementById('features')?.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+          });
+          setCurrentPage(2);
+        } else if (currentPage === 2) {
+          e.preventDefault();
+          document.getElementById('contact')?.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+          });
+          setCurrentPage(3);
+        }
+      } else if (e.deltaY < 0) {
+        // Yukarı scroll
+        if (currentPage === 3) {
+          e.preventDefault();
+          document.getElementById('features')?.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+          });
+          setCurrentPage(2);
+        } else if (currentPage === 2) {
+          e.preventDefault();
+          window.scrollTo({ 
+            top: 0, 
+            behavior: 'smooth' 
+          });
+          setCurrentPage(1);
+        }
       }
+      
+      setTimeout(() => { 
+        isScrolling = false; 
+      }, 800);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: false });
+    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('wheel', handleWheel, { passive: false });
     
     return () => {
@@ -147,12 +214,22 @@ const LandingPage = () => {
       window.removeEventListener('wheel', handleWheel);
       clearTimeout(scrollTimeout);
     };
-  }, [isScrolled]);
+  }, [currentPage]);
 
   return (
     <div className="relative overflow-auto">
       {/* İlk Ekran - Tam Sayfa */}
       <div className="h-screen relative flex flex-col">
+
+        {/* İletişim Butonu - Sağ Üst Köşe */}
+        <div className="absolute top-6 right-6 z-20">
+          <button 
+            onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+            className="text-sm text-gray-600 hover:text-gray-800 font-medium px-4 py-2 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 transition-all duration-200"
+          >
+            İletişim
+          </button>
+        </div>
 
         {/* Gradient Background - Sadece ilk ekran için */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 overflow-hidden">
@@ -312,6 +389,22 @@ const LandingPage = () => {
                   >
                     Daha Fazla Bilgi
                   </button>
+                  <button
+                    onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="px-8 py-4 bg-gray-900 text-white font-medium rounded-sm hover:bg-gray-800 transition duration-200"
+                  >
+                    Demo Talep Et
+                  </button>
+                </div>
+                
+                {/* Mockup Görsel */}
+                <div className="mt-16 flex justify-center">
+                  <img 
+                    src="/images/laptop-mockup.png" 
+                    alt="Vize CRM Mockup" 
+                    className="w-full h-auto"
+                    style={{ maxWidth: '2048px' }}
+                  />
                 </div>
           </main>
         </div>
@@ -382,6 +475,16 @@ const LandingPage = () => {
           </div>
         </div>
         
+        {/* Aşağı Ok - İletişim Bölümüne Git */}
+        <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 text-center">
+          <button 
+            onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+            className="text-white/60 hover:text-white transition-colors duration-300"
+          >
+            <ChevronDown size={24} />
+          </button>
+        </div>
+        
         {/* Footer - Sayfanın altında sabit */}
         <div className="absolute bottom-4 left-0 right-0 text-center">
           <p className="text-gray-300 text-sm leading-none">
@@ -391,11 +494,104 @@ const LandingPage = () => {
       </div>
       </div>
 
+      {/* Üçüncü Ekran - İletişim Formu */}
+      <div id="contact" className="min-h-screen relative flex flex-col">
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50"></div>
+        
+        <div className="flex-1 relative z-10 flex flex-col justify-center items-center py-16">
+          <div className="w-full max-w-sm mx-auto px-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-light text-gray-800 mb-2">
+                İletişim
+              </h2>
+              <p className="text-sm text-gray-500">
+                Bizimle iletişime geçin
+              </p>
+            </div>
+
+            <form onSubmit={handleFormSubmit} className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Ad/Soyad veya Firma İsmi"
+                  className="w-full px-3 py-2.5 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 transition-all duration-200 text-sm"
+                />
+              </div>
+              
+              <div>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="E-posta Adresiniz"
+                  className="w-full px-3 py-2.5 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 transition-all duration-200 text-sm"
+                />
+              </div>
+              
+              <div>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="Telefon Numaranız"
+                  className="w-full px-3 py-2.5 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 transition-all duration-200 text-sm"
+                />
+              </div>
+              
+              <div>
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  placeholder="Mesajınız"
+                  rows={3}
+                  className="w-full px-3 py-2.5 border-0 border-b border-gray-200 bg-transparent focus:outline-none focus:border-gray-400 transition-all duration-200 resize-none text-sm"
+                />
+              </div>
+              
+              {/* Status Messages */}
+              {submitStatus === 'success' && (
+                <div className="text-green-600 text-sm text-center">
+                  Mesajınız başarıyla gönderildi!
+                </div>
+              )}
+              
+              {submitStatus === 'error' && (
+                <div className="text-red-600 text-sm text-center">
+                  Bir hata oluştu. Lütfen tekrar deneyin.
+                </div>
+              )}
+              
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full px-4 py-2.5 bg-gray-800 text-white text-sm font-light rounded-none hover:bg-gray-700 transition duration-200 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Gönderiliyor...' : 'Gönder'}
+              </button>
+            </form>
+          </div>
+        </div>
+        
+        {/* Footer - Sayfanın tam en altında */}
+        <div className="py-8 text-center bg-white/20 backdrop-blur-sm border-t border-white/30">
+          <p className="text-gray-600 text-sm">
+            &copy; 2025 Vize Danışmanlık Yönetim Sistemi. Tüm hakları saklıdır.
+          </p>
+        </div>
+      </div>
+
               {/* Scroll to Top Button */}
         <button
           onClick={handleScrollToTop}
           className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/10 backdrop-blur-md border border-white/20 text-white p-3 rounded-full shadow-lg hover:bg-white/20 hover:border-white/30 transition-all duration-300 ${
-            showScrollTop 
+            currentPage > 1 
               ? 'opacity-100 scale-100' 
               : 'opacity-0 scale-75 pointer-events-none'
           }`}

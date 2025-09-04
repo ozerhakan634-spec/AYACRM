@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Home, 
-  Users, 
-  FileText, 
-  FolderOpen, 
-  Calendar, 
-  BarChart3, 
+import {
+  Home,
+  Users,
+  FileText,
+  FolderOpen,
+  Calendar,
+  BarChart3,
   DollarSign,
   Settings,
   Menu,
@@ -16,7 +16,10 @@ import {
   UserCircle,
   MessageCircle,
   CheckSquare,
-  Bell
+  Bell,
+  HelpCircle,
+  MessageSquare,
+  Mail
 } from 'lucide-react';
 import { AuthService } from '../services/auth';
 import { DatabaseService } from '../services/database';
@@ -37,14 +40,15 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Müşteriler', href: '/dashboard/clients', icon: Users },
-    { name: 'Belgeler', href: '/dashboard/documents', icon: FolderOpen },
+    { name: 'Belgeler', href: '/dashboard/documents', icon: FileText },
+    { name: 'Finans', href: '/dashboard/finance', icon: DollarSign },
     { name: 'Görevlerim', href: '/dashboard/tasks', icon: CheckSquare },
     { name: 'Takvim', href: '/dashboard/calendar', icon: Calendar },
     { name: 'Raporlar', href: '/dashboard/reports', icon: BarChart3 },
-    { name: 'Finans', href: '/dashboard/finance', icon: DollarSign },
     { name: 'Danışmanlar', href: '/dashboard/consultants', icon: Users },
     { name: 'Takım Yönetimi', href: '/dashboard/team-management', icon: UserCog },
     { name: 'AI Asistanı', href: '/dashboard/chatbot', icon: MessageCircle },
+    { name: 'Destek Yönetimi', href: '/dashboard/support-management', icon: HelpCircle },
   ];
 
   // Sadece izni olan menüleri göster
@@ -72,6 +76,11 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
         return currentUser.permissions.consultants;
       case '/dashboard/chatbot':
         return currentUser.permissions.chatbot; // AI Asistanı için chatbot izni gerekli
+
+      case '/dashboard/support-management':
+        return currentUser.permissions.support_management; // Destek Yönetimi için support_management izni gerekli
+    case '/dashboard/email-settings':
+      return currentUser.permissions.settings; // E-posta Ayarları için settings izni gerekli
       default:
         return false;
     }
@@ -247,7 +256,7 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
                   className={`group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
                     isActive
                       ? 'bg-gray-100 text-gray-800'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
                   }`}
                 >
                   <div className="flex items-center">
@@ -314,6 +323,26 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
               </button>
             </div>
           </div>
+
+          {/* Destek Butonu */}
+          {(currentUser?.permissions?.settings || currentUser?.permissions?.support) && (
+            <Link
+              to="/dashboard/support"
+              className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                location.pathname === '/dashboard/support'
+                  ? 'bg-gray-100 text-gray-800'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              <HelpCircle 
+                size={20} 
+                className={`mr-3 ${
+                  location.pathname === '/dashboard/support' ? 'text-gray-600' : 'text-gray-400 group-hover:text-gray-500'
+                }`}
+              />
+              Destek
+            </Link>
+          )}
 
           {/* Ayarlar Butonu */}
           {currentUser?.permissions?.settings && (

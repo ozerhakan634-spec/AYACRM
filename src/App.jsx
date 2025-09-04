@@ -17,6 +17,8 @@ import Settings from './pages/Settings';
 import Finance from './pages/Finance';
 import TeamManagement from './pages/TeamManagement';
 import ChatBot from './pages/ChatBot';
+import Support from './pages/Support';
+import SupportManagement from './pages/SupportManagement';
 import { AuthService } from './services/auth';
 
 
@@ -142,6 +144,18 @@ function App() {
                 <Route path="settings" element={
                   <ProtectedRoute requiredPermission="settings">
                     <Settings />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="support" element={
+                  <ProtectedRoute requiredPermission="support">
+                    <Support />
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="support-management" element={
+                  <ProtectedRoute requiredPermission="support_management">
+                    <SupportManagement />
                   </ProtectedRoute>
                 } />
                 

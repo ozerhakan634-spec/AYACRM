@@ -51,6 +51,8 @@ const TeamManagement = () => {
     { key: 'finance', name: 'Finans', description: 'Mali işlemler' },
     { key: 'consultants', name: 'Danışmanlar', description: 'Personel bilgileri' },
     { key: 'chatbot', name: 'AI Asistanı', description: 'Yapay zeka destekli asistan' },
+    { key: 'support', name: 'Destek', description: 'Destek talepleri ve yardım' },
+    { key: 'support_management', name: 'Destek Yönetimi', description: 'Tüm destek taleplerini yönetme' },
     { key: 'settings', name: 'Ayarlar', description: 'Sistem ayarları' }
   ];
 

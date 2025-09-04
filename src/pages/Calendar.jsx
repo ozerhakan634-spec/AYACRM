@@ -701,7 +701,7 @@ const Calendar = () => {
                 <div class="subtitle">
                   ${selectedConsultant === 'all' 
                     ? 'Tüm Danışmanlar - Randevu Takvimi'
-                    : `Danışman ${consultants.find(c => c.id == selectedConsultant)?.name || selectedConsultant} - Randevu Takvimi`
+                    : `${consultants.find(c => c.id == selectedConsultant)?.name || `Danışman ${selectedConsultant}`} - Randevu Takvimi`
                   }
                 </div>
               </div>
@@ -898,6 +898,14 @@ const Calendar = () => {
       .filter(client => client.appointment_date && client.appointment_time)
       .map(client => {
         console.log('Randevu oluşturuluyor:', client);
+        
+        // Danışman ismini bul
+        let consultantName = 'Belirtilmemiş';
+        if (client.consultant_id && consultants.length > 0) {
+          const consultant = consultants.find(c => c.id == client.consultant_id);
+          consultantName = consultant ? consultant.name : `Danışman ${client.consultant_id}`;
+        }
+        
         return {
           id: client.id,
           title: `${client.visa_type || 'Randevu'} - ${client.name}`,
@@ -910,7 +918,7 @@ const Calendar = () => {
           email: client.email,
           location: 'Ofis',
           notes: client.notes,
-          consultant: client.consultant_id ? `Danışman ${client.consultant_id}` : 'Belirtilmemiş',
+          consultant: consultantName,
           consultant_id: client.consultant_id, // Danışman ID'sini ekle
           country: client.country,
           status: client.status,
@@ -922,7 +930,7 @@ const Calendar = () => {
     console.log('Randevu bilgileri olan müşteri sayısı:', eventsList.length);
     console.log('Oluşturulan events:', eventsList);
     setEvents(eventsList);
-  }, [clients]);
+  }, [clients, consultants]);
 
   const getDaysForView = () => {
     switch (view) {

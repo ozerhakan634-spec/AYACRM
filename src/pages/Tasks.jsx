@@ -30,6 +30,7 @@ const Tasks = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
+  const [filterConsultant, setFilterConsultant] = useState('all');
 
   // Form state for adding/editing tasks
   const [taskForm, setTaskForm] = useState({
@@ -74,8 +75,17 @@ const Tasks = () => {
       );
     }
 
+    // Danışman filtresi
+    if (filterConsultant !== 'all') {
+      filtered = filtered.filter(task => {
+        if (!task.assigned_to) return false;
+        const assignedTo = Array.isArray(task.assigned_to) ? task.assigned_to : [task.assigned_to];
+        return assignedTo.some(assigned => assigned === filterConsultant);
+      });
+    }
+
     setFilteredTasks(filtered);
-  }, [tasks, filterStatus, filterPriority, searchTerm]);
+  }, [tasks, filterStatus, filterPriority, filterConsultant, searchTerm]);
 
   const loadTasks = async () => {
     try {
@@ -520,6 +530,18 @@ const Tasks = () => {
               <option value="medium">Orta</option>
               <option value="low">Düşük</option>
             </select>
+            <select
+              value={filterConsultant}
+              onChange={(e) => setFilterConsultant(e.target.value)}
+              className="px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-1 focus:ring-blue-400 focus:border-blue-400 bg-gray-50"
+            >
+              <option value="all">Tüm Danışmanlar</option>
+              {consultants.map(consultant => (
+                <option key={consultant.id} value={consultant.name}>
+                  {consultant.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -601,6 +623,12 @@ const Tasks = () => {
                         <div className="flex items-center">
                           <User size={12} className="mr-1" />
                           {formatAssignedTo(task.assigned_to)}
+                        </div>
+                      )}
+                      {task.created_by && (
+                        <div className="flex items-center">
+                          <User size={12} className="mr-1" />
+                          <span>Veren: {task.created_by}</span>
                         </div>
                       )}
                     </div>

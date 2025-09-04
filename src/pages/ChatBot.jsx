@@ -69,37 +69,65 @@ const ChatBot = () => {
   const analyzeCRMData = async () => {
     setIsAnalyzing(true);
     try {
+      console.log('🔄 AI Asistan veri yükleme başladı...');
+      
       // Paralel veri yükleme
       const [clients, consultants, documents, payments] = await Promise.all([
-        DatabaseService.getClients().catch(() => []),
-        DatabaseService.getConsultantsWithClientCount().catch(() => []),
-        DatabaseService.getDocuments().catch(() => []),
-        DatabaseService.getPayments().catch(() => [])
+        DatabaseService.getClients().catch((err) => {
+          console.error('❌ Müşteri verisi yükleme hatası:', err);
+          return [];
+        }),
+        DatabaseService.getConsultantsWithClientCount().catch((err) => {
+          console.error('❌ Danışman verisi yükleme hatası:', err);
+          return [];
+        }),
+        DatabaseService.getDocuments().catch((err) => {
+          console.error('❌ Belge verisi yükleme hatası:', err);
+          return [];
+        }),
+        DatabaseService.getPayments().catch((err) => {
+          console.error('❌ Ödeme verisi yükleme hatası:', err);
+          return [];
+        })
       ]);
 
+      // Veri doğrulama ve temizleme
+      const cleanClients = Array.isArray(clients) ? clients.filter(c => c && c.id) : [];
+      const cleanConsultants = Array.isArray(consultants) ? consultants.filter(c => c && c.id) : [];
+      const cleanDocuments = Array.isArray(documents) ? documents.filter(d => d && d.id) : [];
+      const cleanPayments = Array.isArray(payments) ? payments.filter(p => p && p.id) : [];
+
+      console.log('✅ AI Asistan veri yükleme tamamlandı:', {
+        clients: cleanClients.length,
+        consultants: cleanConsultants.length,
+        documents: cleanDocuments.length,
+        payments: cleanPayments.length,
+        sampleClients: cleanClients.slice(0, 3).map(c => ({ id: c.id, name: c.name, email: c.email }))
+      });
+
       return {
-        clients,
-        consultants,
-        documents,
-        payments,
+        clients: cleanClients,
+        consultants: cleanConsultants,
+        documents: cleanDocuments,
+        payments: cleanPayments,
         summary: {
-          totalClients: clients.length,
-          activeClients: clients.filter(c => c.status === 'active').length,
-          totalConsultants: consultants.length,
-          totalDocuments: documents.length,
-          totalPayments: payments.length,
-          totalRevenue: payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0)
+          totalClients: cleanClients.length,
+          activeClients: cleanClients.filter(c => c.status === 'active').length,
+          totalConsultants: cleanConsultants.length,
+          totalDocuments: cleanDocuments.length,
+          totalPayments: cleanPayments.length,
+          totalRevenue: cleanPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0)
         }
       };
     } catch (error) {
-      console.error('Veri analizi hatası:', error);
+      console.error('❌ Veri analizi hatası:', error);
       return null;
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  // Gelişmiş AI analiz motoru
+  // ChatGPT'nin önerdiği gelişmiş AI analiz motoru
   const generateAIResponse = async (userMessage, crmData) => {
     const { clients, consultants, documents, payments, summary } = crmData;
     const message = userMessage.toLowerCase();
@@ -107,9 +135,12 @@ const ChatBot = () => {
     // Çok daha detaylı analiz
     const analysis = analyzeUserIntent(message);
     
+    // Müşteri arama sorguları için özel işlem
+    if (analysis.intent === 'specific_client') {
+      return await generateSupabaseBasedClientAnalysis(userMessage, clients, payments, documents);
+    }
+    
     switch (analysis.intent) {
-      case 'specific_client':
-        return generateSpecificClientAnalysis(analysis.params, clients, payments, documents);
       case 'time_based':
         return generateTimeBasedAnalysis(analysis.params, clients, payments);
       case 'comparison':
@@ -159,7 +190,10 @@ const ChatBot = () => {
     }
 
     // Özel müşteri sorguları
-    if (message.includes('isimli') || message.includes('adlı') || message.includes('hangi müşteri')) {
+    if (message.includes('isimli') || message.includes('adlı') || message.includes('hangi müşteri') || 
+        message.includes('müşteri') || message.includes('kim') || message.includes('nerede') ||
+        message.includes('bul') || message.includes('ara') || message.includes('göster')) {
+      params.message = message; // Orijinal mesajı sakla
       return { intent: 'specific_client', params };
     }
 
@@ -794,26 +828,437 @@ ${solutions.map((solution, index) => `${index + 1}. ${solution}`).join('\n')}`}
 ${problems.length > 0 ? '🚀 **Sonraki Adım:** En kritik problemden başlayarak 7 günlük aksiyon planı oluştur.' : '🎉 **Devam Eden Başarı:** Mevcut performansı korumak için düzenli takip yap.'}`;
   };
 
+  // ChatGPT'nin önerdiği Supabase tabanlı müşteri analizi
+  const generateSupabaseBasedClientAnalysis = async (userMessage, clients, payments, documents) => {
+    console.log('🔍 Supabase tabanlı müşteri analizi başladı:', userMessage);
+    
+    // 1. Kullanıcının mesajından isim yakala (ChatGPT'nin önerdiği gibi)
+    const nameMatch = userMessage.match(/([A-ZÇĞİÖŞÜ\s]+)/i);
+    const searchName = nameMatch ? nameMatch[0].trim() : null;
+    
+    console.log('🔍 Yakalanan isim:', searchName);
+    
+    let foundClients = [];
+    
+    if (searchName) {
+      // 2. Gelişmiş Türkçe karakter normalizasyonu
+      const normalizeTurkishText = (text) => {
+        return text
+          .toUpperCase()
+          .replace(/İ/g, "I")
+          .replace(/Ş/g, "S")
+          .replace(/Ç/g, "C")
+          .replace(/Ü/g, "U")
+          .replace(/Ö/g, "O")
+          .replace(/Ğ/g, "G")
+          .replace(/ı/g, "I")
+          .replace(/ş/g, "S")
+          .replace(/ç/g, "C")
+          .replace(/ü/g, "U")
+          .replace(/ö/g, "O")
+          .replace(/ğ/g, "G");
+      };
+      
+      const normalizedSearchName = normalizeTurkishText(searchName);
+      
+      // 3. Supabase benzeri arama (mevcut verilerde)
+      foundClients = clients.filter(client => {
+        if (!client || !client.name) return false;
+        
+        const normalizedClientName = normalizeTurkishText(client.name);
+        const normalizedClientEmail = normalizeTurkishText(client.email || '');
+        const normalizedClientPhone = normalizeTurkishText(client.phone || '');
+        
+        // Case-insensitive ve Türkçe karakter uyumlu arama
+        return normalizedClientName.includes(normalizedSearchName) ||
+               normalizedClientEmail.includes(normalizedSearchName) ||
+               normalizedClientPhone.includes(normalizedSearchName) ||
+               client.name.toLowerCase().includes(searchName.toLowerCase()) ||
+               (client.email && client.email.toLowerCase().includes(searchName.toLowerCase())) ||
+               (client.phone && client.phone.toLowerCase().includes(searchName.toLowerCase()));
+      });
+    }
+    
+    console.log('🔍 Bulunan müşteriler:', foundClients.length, foundClients.map(c => c.name));
+    
+    // 4. AI'ya hem kullanıcı sorusunu hem de veritabanı sonucunu gönder
+    const aiPrompt = `
+Sen bir CRM vize asistanısın. Veritabanı sonuçlarını kullanarak yanıt ver.
+
+KULLANICI SORUSU: ${userMessage}
+
+VERİTABANI SONUCU: ${JSON.stringify(foundClients, null, 2)}
+
+KURALLAR:
+- Eğer veri boşsa: "❌ **${searchName || 'Aranan kişi'}** için müşteri bulunamadı. Kayıtlarda bu isimle eşleşen müşteri bulunmuyor."
+- Eğer veri varsa: Müşteri bilgilerini detaylı göster
+- Kısa ve net cevap ver (maksimum 5-6 cümle)
+- Önemli bilgileri **bold** yap
+- Türkçe tarih formatı kullan
+- Para birimi belirt (TL, EUR, USD)
+- Başvuru numarası varsa göster
+- Danışman bilgisi varsa göster
+- Randevu bilgisi varsa göster
+- Ödeme durumu varsa göster
+`;
+
+    try {
+      // OpenAI API çağrısı (eğer API key varsa)
+      if (aiConfig.useAI && aiConfig.apiKey) {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${aiConfig.apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-3.5-turbo',
+            messages: [
+              {
+                role: 'system',
+                content: 'Sen bir CRM vize asistanısın. Veritabanı sonuçlarını kullanarak yanıt ver.'
+              },
+              {
+                role: 'user',
+                content: aiPrompt
+              }
+            ],
+            max_tokens: 500,
+            temperature: 0.7
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return data.choices[0].message.content;
+        }
+      }
+      
+      // AI çalışmazsa manuel formatlama
+      return generateManualClientResponse(foundClients, searchName, payments, documents);
+      
+    } catch (error) {
+      console.error('❌ AI analizi hatası:', error);
+      return generateManualClientResponse(foundClients, searchName, payments, documents);
+    }
+  };
+
+  // Manuel müşteri yanıtı (AI çalışmazsa)
+  const generateManualClientResponse = (foundClients, searchName, payments, documents) => {
+    if (foundClients.length === 0) {
+      return `❌ **${searchName || 'Aranan kişi'}** için müşteri bulunamadı. Kayıtlarda bu isimle eşleşen müşteri bulunmuyor.`;
+    }
+    
+    if (foundClients.length === 1) {
+      const client = foundClients[0];
+      const clientPayments = payments.filter(p => p.client_id === client.id);
+      const clientDocuments = documents.filter(d => d.clientId === client.id);
+      
+      const totalPayment = clientPayments
+        .filter(p => p.status === 'completed')
+        .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      
+      return `🔍 **Müşteri Detayları**
+
+👤 **Müşteri Bilgileri:**
+• **Ad:** ${client.name}
+• **E-posta:** ${client.email || 'Belirtilmemiş'}
+• **Telefon:** ${client.phone || 'Belirtilmemiş'}
+• **Ülke:** ${client.country || 'Belirtilmemiş'}
+• **Vize Türü:** ${client.visa_type || 'Belirtilmemiş'}
+• **Başvuru No:** ${client.application_number || 'Belirtilmemiş'}
+• **Durum:** ${client.status || 'Belirtilmemiş'}
+• **Kayıt Tarihi:** ${client.created_at ? new Date(client.created_at).toLocaleDateString('tr-TR') : 'Belirtilmemiş'}
+
+💰 **Ödeme Durumu:**
+• Toplam Ödeme: ${clientPayments.length} işlem
+• Tamamlanan: ₺${totalPayment.toLocaleString('tr-TR')}
+
+📁 **Belge Durumu:**
+• Toplam Belge: ${clientDocuments.length}
+• Onaylanmış: ${clientDocuments.filter(d => d.status === 'verified').length}
+• Bekleyen: ${clientDocuments.filter(d => d.status === 'pending').length}
+
+📅 **Randevu Bilgisi:**
+${client.appointment_date ? 
+  `• Randevu Tarihi: ${new Date(client.appointment_date).toLocaleDateString('tr-TR')}
+• Randevu Saati: ${client.appointment_time || 'Belirtilmemiş'}` : 
+  '• Randevu planlanmamış'}
+
+${client.notes ? `📝 **Notlar:** ${client.notes}` : ''}`;
+    }
+    
+    return `🔍 **Müşteri Arama Sonucu**
+
+✅ **"${searchName}"** için ${foundClients.length} müşteri bulundu:
+
+${foundClients.map((client, index) => {
+  const clientPayments = payments.filter(p => p.client_id === client.id);
+  const totalPayment = clientPayments
+    .filter(p => p.status === 'completed')
+    .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  
+  return `${index + 1}. **${client.name}**
+   • Ülke: ${client.country || 'Belirtilmemiş'}
+   • Vize: ${client.visa_type || 'Belirtilmemiş'}
+   • Durum: ${client.status || 'Belirtilmemiş'}
+   • Toplam Ödeme: ₺${totalPayment.toLocaleString('tr-TR')}
+   • E-posta: ${client.email || 'Belirtilmemiş'}`;
+}).join('\n\n')}
+
+💡 **Detaylı bilgi için:** Müşteri adını tam olarak yazarak tekrar sorun.`;
+  };
+
   const generateSpecificClientAnalysis = (params, clients, payments, documents) => {
-    // Bu fonksiyon belirli müşteri sorgularını işler
-    return `🔍 **Müşteri Arama Sonuçları**
+    // Kullanıcı mesajından müşteri adını çıkar
+    const message = params.message || '';
+    
+    // ChatGPT'nin önerdiği gelişmiş arama terimleri çıkarma
+    let searchTerms = [];
+    
+    // Farklı arama stratejileri (ChatGPT'nin önerdiği gibi)
+    const strategies = [
+      // Orijinal mesajdan kelimeler (büyük/küçük harf duyarlı)
+      message.split(' ').filter(word => word.length > 1),
+      // Normalize edilmiş mesajdan kelimeler
+      normalizeTurkishText(message).split(' ').filter(word => word.length > 1),
+      // Büyük harfli kelimeler (isim olabilir)
+      message.split(' ').filter(word => word.length > 2 && word === word.toUpperCase()),
+      // Tırnak içindeki isimler
+      message.match(/"([^"]+)"/g)?.map(match => match.replace(/"/g, '')) || [],
+      // Küçük harfli kelimeler
+      message.toLowerCase().split(' ').filter(word => word.length > 1),
+      // Tek kelime isimler
+      message.split(' ').filter(word => word.length > 2)
+    ];
+    
+    // Tüm stratejilerden gelen terimleri birleştir ve tekrarları kaldır
+    searchTerms = [...new Set(strategies.flat())];
+    
+    console.log('🔍 Arama terimleri çıkarıldı:', {
+      originalMessage: message,
+      normalizedMessage: normalizedMessage,
+      searchTerms: searchTerms,
+      strategies: strategies
+    });
+    
+    // Gelişmiş Türkçe karakter normalizasyonu
+    const normalizeTurkishText = (text) => {
+      return text
+        .toUpperCase()
+        .replace(/İ/g, "I")
+        .replace(/Ş/g, "S")
+        .replace(/Ç/g, "C")
+        .replace(/Ü/g, "U")
+        .replace(/Ö/g, "O")
+        .replace(/Ğ/g, "G")
+        .replace(/Ğ/g, "G")
+        .replace(/ı/g, "I")
+        .replace(/ş/g, "S")
+        .replace(/ç/g, "C")
+        .replace(/ü/g, "U")
+        .replace(/ö/g, "O")
+        .replace(/ğ/g, "G");
+    };
 
-Bu özellik geliştirilme aşamasında. Şu anda aşağıdaki genel müşteri bilgilerini sunabilirim:
+    // Müşteri arama fonksiyonu - ChatGPT'nin önerdiği çözüm
+    const findClients = (searchTerms) => {
+      console.log('🔍 Müşteri arama başladı:', { searchTerms, totalClients: clients.length });
+      
+      return clients.filter(client => {
+        // Güvenli veri kontrolü
+        if (!client || !client.name) {
+          console.warn('⚠️ Geçersiz müşteri verisi:', client);
+          return false;
+        }
+        
+        const clientName = client.name || '';
+        const clientEmail = client.email || '';
+        const clientPhone = client.phone || '';
+        const clientCountry = client.country || '';
+        const clientVisaType = client.visa_type || '';
+        
+        // Normalize edilmiş versiyonlar (ChatGPT'nin önerdiği gibi)
+        const normalizedClientName = normalizeTurkishText(clientName);
+        const normalizedClientEmail = normalizeTurkishText(clientEmail);
+        const normalizedClientPhone = normalizeTurkishText(clientPhone);
+        const normalizedClientCountry = normalizeTurkishText(clientCountry);
+        const normalizedClientVisaType = normalizeTurkishText(clientVisaType);
+        
+        // Her arama terimi için normalize et
+        const normalizedSearchTerms = searchTerms.map(term => normalizeTurkishText(term));
+        
+        // Case-insensitive ve Türkçe karakter uyumlu arama
+        const hasNameMatch = normalizedSearchTerms.some(searchTerm => {
+          // Tam isim eşleşmesi
+          if (normalizedClientName.includes(searchTerm)) {
+            console.log('✅ Normalize edilmiş isim eşleşmesi:', clientName, '←', searchTerm);
+            return true;
+          }
+          
+          // Kelime bazlı arama
+          const clientNameWords = normalizedClientName.split(' ').filter(word => word.length > 0);
+          const searchWords = searchTerm.split(' ').filter(word => word.length > 0);
+          
+          return searchWords.some(searchWord => 
+            clientNameWords.some(clientWord => 
+              clientWord.includes(searchWord) || searchWord.includes(clientWord)
+            )
+          );
+        });
+        
+        // Diğer alanlarda arama (normalize edilmiş)
+        const hasOtherMatch = normalizedSearchTerms.some(searchTerm => 
+          normalizedClientEmail.includes(searchTerm) || 
+          normalizedClientPhone.includes(searchTerm) ||
+          normalizedClientCountry.includes(searchTerm) ||
+          normalizedClientVisaType.includes(searchTerm)
+        );
+        
+        if (hasOtherMatch) {
+          console.log('✅ Diğer alan eşleşmesi:', clientName, '←', normalizedSearchTerms);
+        }
+        
+        return hasNameMatch || hasOtherMatch;
+      });
+    };
+    
+    const foundClients = findClients(searchTerms);
+    
+    // Detaylı debug bilgisi
+    console.log('🔍 Müşteri Arama Sonuçları:', {
+      originalMessage: message,
+      searchTerms: searchTerms,
+      foundClients: foundClients.length,
+      allClients: clients.length,
+      foundClientNames: foundClients.map(c => c.name),
+      sampleClients: clients.slice(0, 5).map(c => ({ 
+        id: c.id, 
+        name: c.name, 
+        email: c.email,
+        phone: c.phone,
+        country: c.country 
+      }))
+    });
+    
+    if (foundClients.length === 0) {
+      // Benzer isimleri öner
+      const allNames = clients.map(c => c.name || '').filter(name => name.length > 0);
+      const searchWords = searchTerms.filter(term => term.length > 2);
+      
+      const similarNames = allNames.filter(name => {
+        const nameLower = name.toLowerCase();
+        return searchWords.some(searchWord => 
+          nameLower.includes(searchWord) || 
+          searchWord.includes(nameLower.split(' ')[0]) ||
+          searchWord.includes(nameLower.split(' ')[1])
+        );
+      }).slice(0, 5);
+      
+      return `🔍 **Müşteri Arama Sonucu**
 
-📊 **Müşteri Özeti:**
-• Toplam Müşteri: ${clients.length}
-• En Son Eklenen: ${clients.length > 0 ? clients.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].name : 'Yok'}
-• En Popüler Ülke: ${(() => {
-  const countries = clients.reduce((acc, c) => {
-    const country = c.country || 'Belirtilmemiş';
-    acc[country] = (acc[country] || 0) + 1;
-    return acc;
-  }, {});
-  const topCountry = Object.entries(countries).sort((a, b) => b[1] - a[1])[0];
-  return topCountry ? `${topCountry[0]} (${topCountry[1]} müşteri)` : 'Yok';
-})()}
+❌ **"${message}"** için müşteri bulunamadı.
 
-💡 **İpucu:** "Ahmet isimli müşteri" veya "Türkiye müşterileri" gibi daha spesifik sorular sorun.`;
+💡 **Arama İpuçları:**
+• Müşteri adının tamamını yazın
+• E-posta adresi ile arayın
+• Telefon numarası ile arayın
+• Ülke adı ile arayın (örn: "Türkiye müşterileri")
+• Vize türü ile arayın (örn: "öğrenci vizesi müşterileri")
+
+${similarNames.length > 0 ? `🔍 **Benzer İsimler:**
+${similarNames.map(name => `• ${name}`).join('\n')}
+
+💡 **Bu isimlerden birini aramayı deneyin**` : ''}
+
+📊 **Mevcut Müşteri Sayısı:** ${clients.length}`;
+    }
+    
+    if (foundClients.length === 1) {
+      const client = foundClients[0];
+      const clientPayments = payments.filter(p => p.client_id === client.id);
+      const clientDocuments = documents.filter(d => d.clientId === client.id);
+      
+      const totalPayment = clientPayments
+        .filter(p => p.status === 'completed')
+        .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      
+      const pendingPayment = clientPayments
+        .filter(p => p.status === 'pending')
+        .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      
+      return `🔍 **Müşteri Detayları**
+
+👤 **Müşteri Bilgileri:**
+• **Ad:** ${client.name}
+• **E-posta:** ${client.email || 'Belirtilmemiş'}
+• **Telefon:** ${client.phone || 'Belirtilmemiş'}
+• **Ülke:** ${client.country || 'Belirtilmemiş'}
+• **Vize Türü:** ${client.visa_type || 'Belirtilmemiş'}
+• **Durum:** ${client.status || 'Belirtilmemiş'}
+• **Kayıt Tarihi:** ${client.created_at ? new Date(client.created_at).toLocaleDateString('tr-TR') : 'Belirtilmemiş'}
+
+💰 **Ödeme Durumu:**
+• Toplam Ödeme: ${clientPayments.length} işlem
+• Tamamlanan: ₺${totalPayment.toLocaleString('tr-TR')}
+• Bekleyen: ₺${pendingPayment.toLocaleString('tr-TR')}
+
+📁 **Belge Durumu:**
+• Toplam Belge: ${clientDocuments.length}
+• Onaylanmış: ${clientDocuments.filter(d => d.status === 'verified').length}
+• Bekleyen: ${clientDocuments.filter(d => d.status === 'pending').length}
+
+📅 **Randevu Bilgisi:**
+${client.appointment_date ? 
+  `• Randevu Tarihi: ${new Date(client.appointment_date).toLocaleDateString('tr-TR')}
+• Randevu Saati: ${client.appointment_time || 'Belirtilmemiş'}` : 
+  '• Randevu planlanmamış'}
+
+${client.notes ? `📝 **Notlar:** ${client.notes}` : ''}`;
+    }
+    
+    if (foundClients.length <= 5) {
+      return `🔍 **Müşteri Arama Sonucu**
+
+✅ **"${message}"** için ${foundClients.length} müşteri bulundu:
+
+${foundClients.map((client, index) => {
+  const clientPayments = payments.filter(p => p.client_id === client.id);
+  const totalPayment = clientPayments
+    .filter(p => p.status === 'completed')
+    .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  
+  return `${index + 1}. **${client.name}**
+   • Ülke: ${client.country || 'Belirtilmemiş'}
+   • Vize: ${client.visa_type || 'Belirtilmemiş'}
+   • Durum: ${client.status || 'Belirtilmemiş'}
+   • Toplam Ödeme: ₺${totalPayment.toLocaleString('tr-TR')}
+   • E-posta: ${client.email || 'Belirtilmemiş'}`;
+}).join('\n\n')}
+
+💡 **Detaylı bilgi için:** Müşteri adını tam olarak yazarak tekrar sorun.`;
+    }
+    
+    return `🔍 **Müşteri Arama Sonucu**
+
+✅ **"${message}"** için ${foundClients.length} müşteri bulundu (ilk 5 gösteriliyor):
+
+${foundClients.slice(0, 5).map((client, index) => {
+  const clientPayments = payments.filter(p => p.client_id === client.id);
+  const totalPayment = clientPayments
+    .filter(p => p.status === 'completed')
+    .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  
+  return `${index + 1}. **${client.name}**
+   • Ülke: ${client.country || 'Belirtilmemiş'}
+   • Vize: ${client.visa_type || 'Belirtilmemiş'}
+   • Durum: ${client.status || 'Belirtilmemiş'}
+   • Toplam Ödeme: ₺${totalPayment.toLocaleString('tr-TR')}`;
+}).join('\n\n')}
+
+... ve ${foundClients.length - 5} müşteri daha
+
+💡 **Daha spesifik arama için:** Müşteri adını tam olarak yazarak tekrar sorun.`;
   };
 
   const generateContextualGeneralAnalysis = (summary, clients, consultants, payments, params) => {

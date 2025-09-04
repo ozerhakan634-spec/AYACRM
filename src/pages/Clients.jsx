@@ -702,6 +702,7 @@ const Clients = () => {
                       <th>Müşteri Adı</th>
                       <th>Ülke</th>
                       <th>Vize Türü</th>
+                      <th>Doğum Tarihi</th>
                       <th>Başvuru No</th>
                       <th>Pasaport</th>
                       <th>Randevu Tarihi</th>
@@ -727,6 +728,11 @@ const Clients = () => {
                         <td>
                           <div style="font-size: 9px; color: #374151;">
                             ${client.visa_type || 'Belirtilmemiş'}
+                          </div>
+                        </td>
+                        <td>
+                          <div style="font-size: 9px; color: #374151;">
+                            ${client.dogum_tarihi ? new Date(client.dogum_tarihi).toLocaleDateString('tr-TR') : 'Belirtilmemiş'}
                           </div>
                         </td>
                         <td>
