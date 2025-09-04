@@ -859,6 +859,7 @@ const Calendar = () => {
       // Gerçek veritabanından danışman verilerini çek
       const consultantsData = await DatabaseService.getConsultants();
       console.log('Veritabanından gelen danışman verileri:', consultantsData);
+      console.log('Danışman verileri detayı:', consultantsData ? consultantsData.map(c => ({ id: c.id, name: c.name })) : 'Veri yok');
       
       if (clientsData && Array.isArray(clientsData)) {
         setClients(clientsData);
@@ -903,7 +904,10 @@ const Calendar = () => {
         let consultantName = 'Belirtilmemiş';
         if (client.consultant_id && consultants.length > 0) {
           const consultant = consultants.find(c => c.id == client.consultant_id);
+          console.log(`🔍 Danışman arama: client.consultant_id=${client.consultant_id}, bulunan danışman:`, consultant);
           consultantName = consultant ? consultant.name : `Danışman ${client.consultant_id}`;
+        } else {
+          console.log(`⚠️ Danışman bulunamadı: client.consultant_id=${client.consultant_id}, consultants.length=${consultants.length}`);
         }
         
         return {

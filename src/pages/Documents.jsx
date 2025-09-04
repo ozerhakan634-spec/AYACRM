@@ -310,34 +310,42 @@ const Documents = () => {
         console.log('📋 Belge bilgileri:', documentInfo);
 
         try {
-          const savedDocument = await DatabaseService.uploadFile(file, clientId, documentInfo);
-          console.log('✅ Dosya başarıyla yüklendi:', savedDocument);
+          const uploadResult = await DatabaseService.uploadFile(file, clientId, documentInfo);
+          console.log('✅ Dosya yükleme sonucu:', uploadResult);
           
-          // Yerel state'i güncelle
-          setUploadedFiles(prev => [...prev, {
-            id: savedDocument.id,
-            name: savedDocument.name,
-            description: savedDocument.description,
-            fileName: savedDocument.originalFileName,
-            fileSize: savedDocument.fileSize + ' MB',
-            fileType: savedDocument.fileType.includes('pdf') ? 'PDF' : 
-                      savedDocument.fileType.includes('jpeg') || savedDocument.fileType.includes('jpg') ? 'JPEG' : 
-                      savedDocument.fileType.includes('png') ? 'PNG' : 'DOC',
-            status: savedDocument.status,
-            uploadDate: savedDocument.uploadedDate,
-            clientId: savedDocument.clientId
-          }]);
+          if (uploadResult.success) {
+            const savedDocument = uploadResult.data;
+            console.log('✅ Dosya başarıyla yüklendi:', savedDocument);
+            
+            // Yerel state'i güncelle
+            setUploadedFiles(prev => [...prev, {
+              id: savedDocument.id,
+              name: savedDocument.name,
+              description: savedDocument.description,
+              fileName: savedDocument.originalFileName,
+              fileSize: savedDocument.fileSize + ' MB',
+              fileType: savedDocument.fileType.includes('pdf') ? 'PDF' : 
+                        savedDocument.fileType.includes('jpeg') || savedDocument.fileType.includes('jpg') ? 'JPEG' : 
+                        savedDocument.fileType.includes('png') ? 'PNG' : 'DOC',
+              status: savedDocument.status,
+              uploadDate: savedDocument.uploadedDate,
+              clientId: savedDocument.clientId
+            }]);
 
-          // Belgeler listesini yenile
-          await loadData();
-          console.log('🔄 Belgeler listesi yenilendi, yeni belge sayısı:', documentsWithClients.length);
-          
-          alert(`${file.name} dosyası başarıyla yüklendi!`);
+            // Belgeler listesini yenile
+            await loadData();
+            console.log('🔄 Belgeler listesi yenilendi, yeni belge sayısı:', documentsWithClients.length);
+            
+            alert(`${file.name} dosyası başarıyla yüklendi!`);
+          } else {
+            console.error(`❌ ${file.name} dosyası yüklenemedi:`, uploadResult.error);
+            alert(`${file.name}: ${uploadResult.error}`);
+          }
           
         } catch (uploadError) {
           console.error(`❌ ${file.name} dosyası yüklenirken hata:`, uploadError);
           
-          let errorMessage = 'Dosya yüklenirken bir hata oluştu.';
+          let errorMessage = 'Dosya yükleme işlemi sırasında beklenmeyen bir hata oluştu.';
           
           if (uploadError.message) {
             if (uploadError.message.includes('bucket')) {
@@ -712,8 +720,14 @@ const Documents = () => {
         };
 
         // Dosyayı yükle
-        await DatabaseService.uploadFile(newDocument.selectedFile, selectedClient.id, documentInfo);
-        console.log('✅ Dosya başarıyla yüklendi');
+        const uploadResult = await DatabaseService.uploadFile(newDocument.selectedFile, selectedClient.id, documentInfo);
+        if (uploadResult.success) {
+          console.log('✅ Dosya başarıyla yüklendi');
+        } else {
+          console.error('❌ Dosya yüklenemedi:', uploadResult.error);
+          alert(`Dosya yüklenemedi: ${uploadResult.error}`);
+          return;
+        }
         
       } else {
         // Sadece belge bilgilerini kaydet (dosya olmadan)
