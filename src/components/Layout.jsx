@@ -47,7 +47,6 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
     { name: 'Danışmanlar', href: '/dashboard/consultants', icon: Users },
     { name: 'Takım Yönetimi', href: '/dashboard/team-management', icon: Users },
     { name: 'Destek Yönetimi', href: '/dashboard/support-management', icon: MessageCircle },
-    { name: 'Ayarlar', href: '/dashboard/settings', icon: Settings },
   ];
 
   // Kullanıcının izinlerine göre navigasyonu filtrele
@@ -75,8 +74,6 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
         return currentUser.permissions.finance;
       case '/dashboard/support-management':
         return currentUser.permissions.support_management; // Destek yönetimi izni gerekli
-      case '/dashboard/settings':
-        return currentUser.permissions.settings;
       default:
         return false;
     }
