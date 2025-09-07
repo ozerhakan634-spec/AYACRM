@@ -977,7 +977,8 @@ const Clients = () => {
 
   const handleSelectConsultant = async (consultantId) => {
     try {
-      await DatabaseService.updateClient(consultantModal.client.id, { consultant_id: consultantId });
+      // assignConsultantToClient fonksiyonunu kullan (bildirim sistemi dahil)
+      await DatabaseService.assignConsultantToClient(consultantId, consultantModal.client.id);
       
       const selectedConsultant = consultants.find(c => c.id === consultantId);
       
@@ -996,7 +997,8 @@ const Clients = () => {
 
   const handleRemoveConsultant = async () => {
     try {
-      await DatabaseService.updateClient(consultantModal.client.id, { consultant_id: null });
+      // removeConsultantFromClient fonksiyonunu kullan (bildirim sistemi dahil)
+      await DatabaseService.removeConsultantFromClient(consultantModal.client.id);
       
       setSuccessModal({
         isOpen: true,
@@ -1351,189 +1353,189 @@ const Clients = () => {
 
       {/* Filters and Search */}
       <div className="card">
-         <div className="flex flex-col gap-4">
-           {/* Arama ve Temel Filtreler */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Müşteri adı, e-posta, telefon, ülke, vize türü, DS/BAŞVURU NO, pasaport, TC kimlik, adres, notlar, tarih (ör: 15.10.2024, 15/10/2024, 2024)..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="input-field pl-10"
-              />
-              {searchTerm && searchTerm.match(/\d/) && (
-                <div className="absolute top-full left-0 mt-1 text-xs text-gray-500 bg-white px-3 py-1 border border-gray-200 rounded shadow-sm z-10">
-                  📅 Tarih arama formatları: 15.10.2024, 15/10/2024, 15-10-2024, 10.2024, 2024
-                </div>
-              )}
+        <div className="flex flex-col gap-4">
+          {/* Arama ve Temel Filtreler */}
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Müşteri adı, e-posta, telefon, ülke, vize türü, DS/BAŞVURU NO, pasaport, TC kimlik, adres, notlar, tarih (ör: 15.10.2024, 15/10/2024, 2024)..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="input-field pl-10"
+                />
+                {searchTerm && searchTerm.match(/\d/) && (
+                  <div className="absolute top-full left-0 mt-1 text-xs text-gray-500 bg-white px-3 py-1 border border-gray-200 rounded shadow-sm z-10">
+                    📅 Tarih arama formatları: 15.10.2024, 15/10/2024, 15-10-2024, 10.2024, 2024
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <select
+                value={sortCriteria}
+                onChange={(e) => setSortCriteria(e.target.value)}
+                className="input-field"
+              >
+                <option value="newest">En Yeni Kayıt</option>
+                <option value="oldest">En Eski Kayıt</option>
+                <option value="appointmentNear">En Yakın Randevu</option>
+                <option value="appointmentFar">En Uzak Randevu</option>
+              </select>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="input-field"
+              >
+                <option value="all">Tüm Durumlar</option>
+                <option value="active">Randevu Alındı</option>
+                <option value="pending">Bekliyor</option>
+                <option value="completed">Tamamlandı</option>
+              </select>
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="btn-secondary flex items-center justify-center"
+              >
+                <Filter size={16} className="mr-2" />
+                {showAdvancedFilters ? 'Filtreleri Gizle' : 'Gelişmiş Filtreler'}
+              </button>
             </div>
           </div>
-          <div className="flex gap-3">
-            <select
-              value={sortCriteria}
-              onChange={(e) => setSortCriteria(e.target.value)}
-              className="input-field w-auto"
-            >
-              <option value="newest">En Yeni Kayıt</option>
-              <option value="oldest">En Eski Kayıt</option>
-              <option value="appointmentNear">En Yakın Randevu (Sadece Gelecek)</option>
-              <option value="appointmentFar">En Uzak Randevu (Sadece Geçmiş)</option>
-            </select>
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="input-field w-auto"
-            >
-              <option value="all">Tüm Durumlar</option>
-                 <option value="active">Randevu Alındı</option>
-              <option value="pending">Bekliyor</option>
-              <option value="completed">Tamamlandı</option>
-            </select>
-               <button 
-                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                 className="btn-secondary flex items-center"
-               >
-              <Filter size={20} className="mr-2" />
-                 {showAdvancedFilters ? 'Filtreleri Gizle' : 'Gelişmiş Filtreler'}
-            </button>
-          </div>
-           </div>
 
-                       {/* Gelişmiş Filtreler */}
-            {showAdvancedFilters && (
-              <div className="border-t pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Vize Türü</label>
-                    <select
-                      value={selectedVisaType}
-                      onChange={(e) => setSelectedVisaType(e.target.value)}
-                      className="input-field w-full"
-                    >
-                      <option value="all">Tüm Vize Türleri</option>
-                      <option value="Öğrenci Vizesi">Öğrenci Vizesi</option>
-                      <option value="Çalışma Vizesi">Çalışma Vizesi</option>
-                      <option value="Turist Vizesi">Turist Vizesi</option>
-                      <option value="Aile Birleşimi">Aile Birleşimi</option>
-                      <option value="İş Vizesi">İş Vizesi</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Hedef Ülke</label>
-                    <select
-                      value={selectedCountry}
-                      onChange={(e) => setSelectedCountry(e.target.value)}
-                      className="input-field w-full"
-                    >
-                      <option value="all">Tüm Ülkeler</option>
-                      {Array.from(new Set(clientsList
-                        .map(client => client.country)
-                        .filter(country => country && country.trim() !== '')
-                        .map(country => {
-                          // Ülke isimlerini normalize et
-                          const normalized = country.toString().toLowerCase().trim();
-                          // Almanya varyasyonları
-                          if (normalized === 'almanya' || normalized === 'germany' || normalized === 'aaaaaa' || 
-                              normalized === 'almanya' || normalized === 'germany' || normalized === 'deutschland') {
-                            return 'Almanya';
-                          }
-                          // Türkiye varyasyonları
-                          if (normalized === 'türkiye' || normalized === 'turkey' || normalized === 'türkiye' || 
-                              normalized === 'turkey') {
-                            return 'Türkiye';
-                          }
-                          // Amerika varyasyonları
-                          if (normalized === 'amerika' || normalized === 'usa' || normalized === 'united states' || 
-                              normalized === 'amerıka' || normalized === 'amerika' || normalized === 'amerika') {
-                            return 'Amerika Birleşik Devletleri';
-                          }
-                          // İngiltere varyasyonları
-                          if (normalized === 'ingiltere' || normalized === 'england' || normalized === 'united kingdom' || 
-                              normalized === 'ingiltere' || normalized === 'england' || normalized === 'uk') {
-                            return 'İngiltere';
-                          }
-                          // Fransa varyasyonları
-                          if (normalized === 'fransa' || normalized === 'france' || normalized === 'fransa') {
-                            return 'Fransa';
-                          }
-                          // İtalya varyasyonları
-                          if (normalized === 'italya' || normalized === 'italy' || normalized === 'italya') {
-                            return 'İtalya';
-                          }
-                          // İspanya varyasyonları
-                          if (normalized === 'ispanya' || normalized === 'spain' || normalized === 'ispanya') {
-                            return 'İspanya';
-                          }
-                          // Hollanda varyasyonları
-                          if (normalized === 'hollanda' || normalized === 'netherlands' || normalized === 'hollanda') {
-                            return 'Hollanda';
-                          }
-                          // Belçika varyasyonları
-                          if (normalized === 'belçika' || normalized === 'belgium' || normalized === 'belçika') {
-                            return 'Belçika';
-                          }
-                          // Avusturya varyasyonları
-                          if (normalized === 'avusturya' || normalized === 'austria' || normalized === 'avusturya') {
-                            return 'Avusturya';
-                          }
-                          // İsviçre varyasyonları
-                          if (normalized === 'isviçre' || normalized === 'switzerland' || normalized === 'isviçre') {
-                            return 'İsviçre';
-                          }
-                          // Kanada varyasyonları
-                          if (normalized === 'kanada' || normalized === 'canada' || normalized === 'kanada') {
-                            return 'Kanada';
-                          }
-                          // Avustralya varyasyonları
-                          if (normalized === 'avustralya' || normalized === 'australia' || normalized === 'avustralya') {
-                            return 'Avustralya';
-                          }
-                          // Yeni Zelanda varyasyonları
-                          if (normalized === 'yeni zelanda' || normalized === 'new zealand' || normalized === 'yeni zelanda') {
-                            return 'Yeni Zelanda';
-                          }
-                          // Diğer ülkeler için ilk harfi büyük yap
-                          return country.toString().charAt(0).toUpperCase() + country.toString().slice(1).toLowerCase();
-                        })))
-                        .sort()
-                        .map(country => (
-                          <option key={country} value={country}>
-                            {country}
-                          </option>
-                        ))
-                      }
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Danışman</label>
-                    <select
-                      value={selectedConsultant}
-                      onChange={(e) => setSelectedConsultant(e.target.value)}
-                      className="input-field w-full"
-                    >
-                      <option value="all">Tüm Danışmanlar</option>
-                      <option value="null">Atanmamış</option>
-                      {consultants.map(consultant => (
-                        <option key={consultant.id} value={consultant.id}>
-                          {consultant.name}
+          {/* Gelişmiş Filtreler */}
+          {showAdvancedFilters && (
+            <div className="border-t pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Vize Türü</label>
+                  <select
+                    value={selectedVisaType}
+                    onChange={(e) => setSelectedVisaType(e.target.value)}
+                    className="input-field w-full"
+                  >
+                    <option value="all">Tüm Vize Türleri</option>
+                    <option value="Öğrenci Vizesi">Öğrenci Vizesi</option>
+                    <option value="Çalışma Vizesi">Çalışma Vizesi</option>
+                    <option value="Turist Vizesi">Turist Vizesi</option>
+                    <option value="Aile Birleşimi">Aile Birleşimi</option>
+                    <option value="İş Vizesi">İş Vizesi</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Hedef Ülke</label>
+                  <select
+                    value={selectedCountry}
+                    onChange={(e) => setSelectedCountry(e.target.value)}
+                    className="input-field w-full"
+                  >
+                    <option value="all">Tüm Ülkeler</option>
+                    {Array.from(new Set(clientsList
+                      .map(client => client.country)
+                      .filter(country => country && country.trim() !== '')
+                      .map(country => {
+                        // Ülke isimlerini normalize et
+                        const normalized = country.toString().toLowerCase().trim();
+                        // Almanya varyasyonları
+                        if (normalized === 'almanya' || normalized === 'germany' || normalized === 'aaaaaa' || 
+                            normalized === 'almanya' || normalized === 'germany' || normalized === 'deutschland') {
+                          return 'Almanya';
+                        }
+                        // Türkiye varyasyonları
+                        if (normalized === 'türkiye' || normalized === 'turkey' || normalized === 'türkiye' || 
+                            normalized === 'turkey') {
+                          return 'Türkiye';
+                        }
+                        // Amerika varyasyonları
+                        if (normalized === 'amerika' || normalized === 'usa' || normalized === 'united states' || 
+                            normalized === 'amerıka' || normalized === 'amerika' || normalized === 'amerika') {
+                          return 'Amerika Birleşik Devletleri';
+                        }
+                        // İngiltere varyasyonları
+                        if (normalized === 'ingiltere' || normalized === 'england' || normalized === 'united kingdom' || 
+                            normalized === 'ingiltere' || normalized === 'england' || normalized === 'uk') {
+                          return 'İngiltere';
+                        }
+                        // Fransa varyasyonları
+                        if (normalized === 'fransa' || normalized === 'france' || normalized === 'fransa') {
+                          return 'Fransa';
+                        }
+                        // İtalya varyasyonları
+                        if (normalized === 'italya' || normalized === 'italy' || normalized === 'italya') {
+                          return 'İtalya';
+                        }
+                        // İspanya varyasyonları
+                        if (normalized === 'ispanya' || normalized === 'spain' || normalized === 'ispanya') {
+                          return 'İspanya';
+                        }
+                        // Hollanda varyasyonları
+                        if (normalized === 'hollanda' || normalized === 'netherlands' || normalized === 'hollanda') {
+                          return 'Hollanda';
+                        }
+                        // Belçika varyasyonları
+                        if (normalized === 'belçika' || normalized === 'belgium' || normalized === 'belçika') {
+                          return 'Belçika';
+                        }
+                        // Avusturya varyasyonları
+                        if (normalized === 'avusturya' || normalized === 'austria' || normalized === 'avusturya') {
+                          return 'Avusturya';
+                        }
+                        // İsviçre varyasyonları
+                        if (normalized === 'isviçre' || normalized === 'switzerland' || normalized === 'isviçre') {
+                          return 'İsviçre';
+                        }
+                        // Kanada varyasyonları
+                        if (normalized === 'kanada' || normalized === 'canada' || normalized === 'kanada') {
+                          return 'Kanada';
+                        }
+                        // Avustralya varyasyonları
+                        if (normalized === 'avustralya' || normalized === 'australia' || normalized === 'avustralya') {
+                          return 'Avustralya';
+                        }
+                        // Yeni Zelanda varyasyonları
+                        if (normalized === 'yeni zelanda' || normalized === 'new zealand' || normalized === 'yeni zelanda') {
+                          return 'Yeni Zelanda';
+                        }
+                        // Diğer ülkeler için ilk harfi büyük yap
+                        return country.toString().charAt(0).toUpperCase() + country.toString().slice(1).toLowerCase();
+                      })))
+                      .sort()
+                      .map(country => (
+                        <option key={country} value={country}>
+                          {country}
                         </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex items-end">
-                    <button 
-                      onClick={clearAllFilters}
-                      className="btn-secondary w-full"
-                    >
-                      Filtreleri Temizle
-                    </button>
-                  </div>
+                      ))
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Danışman</label>
+                  <select
+                    value={selectedConsultant}
+                    onChange={(e) => setSelectedConsultant(e.target.value)}
+                    className="input-field w-full"
+                  >
+                    <option value="all">Tüm Danışmanlar</option>
+                    <option value="null">Atanmamış</option>
+                    {consultants.map(consultant => (
+                      <option key={consultant.id} value={consultant.id}>
+                        {consultant.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <button 
+                    onClick={clearAllFilters}
+                    className="btn-secondary w-full"
+                  >
+                    Filtreleri Temizle
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
         </div>
       </div>
 

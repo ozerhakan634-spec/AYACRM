@@ -2,8 +2,45 @@ import { supabase, TABLES, STORAGE_BUCKETS } from '../config/supabase'
 
 // Genel veritabanı işlemleri
 export class DatabaseService {
+  // Authentication kontrolü
+  static async checkAuthentication() {
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) {
+      throw new Error('Authentication required')
+    }
+    return user
+  }
+
+  // Production ortamı debug fonksiyonu
+  static debugEnvironment() {
+    const isProduction = window.location.hostname === 'admin.ayajourneys.com';
+    const environment = import.meta.env.MODE;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    console.log('🔍 Environment Debug Bilgileri:', {
+      isProduction,
+      environment,
+      hostname: window.location.hostname,
+      supabaseUrl: supabaseUrl ? 'Mevcut' : 'Eksik',
+      supabaseAnonKey: supabaseAnonKey ? 'Mevcut' : 'Eksik',
+      supabaseUrlLength: supabaseUrl?.length || 0,
+      supabaseAnonKeyLength: supabaseAnonKey?.length || 0
+    });
+    
+    return {
+      isProduction,
+      environment,
+      supabaseUrl: !!supabaseUrl,
+      supabaseAnonKey: !!supabaseAnonKey
+    };
+  }
+
   // Müşteri işlemleri
   static async getClients() {
+    // Authentication kontrolü - geçici olarak devre dışı
+    // // await this.checkAuthentication();
+    
     const { data, error } = await supabase
       .from(TABLES.CLIENTS)
       .select('*')
@@ -45,16 +82,40 @@ export class DatabaseService {
   }
 
   static async createClient(clientData) {
+    // Authentication kontrolü - geçici olarak devre dışı
+    // // await this.checkAuthentication();
+    
     const { data, error } = await supabase
       .from(TABLES.CLIENTS)
       .insert([clientData])
       .select()
     
     if (error) throw error
+    
+    // Otomatik bildirim oluştur
+    try {
+      await this.createNotification({
+        title: 'Yeni Müşteri Eklendi',
+        message: `${clientData.name} müşterisi sisteme eklendi`,
+        type: 'success',
+        category: 'client',
+        related_id: data[0].id,
+        related_type: 'client'
+      });
+      
+      console.log('✅ Yeni müşteri bildirimi oluşturuldu');
+    } catch (notificationError) {
+      console.warn('⚠️ Bildirim oluşturulamadı:', notificationError);
+      // Bildirim hatası ana işlemi etkilemesin
+    }
+    
     return data[0]
   }
 
   static async updateClient(id, updates) {
+    // Authentication kontrolü
+    // await this.checkAuthentication();
+    
     const { data, error } = await supabase
       .from(TABLES.CLIENTS)
       .update(updates)
@@ -66,6 +127,9 @@ export class DatabaseService {
   }
 
   static async deleteClient(id) {
+    // Authentication kontrolü
+    // await this.checkAuthentication();
+    
     const { error } = await supabase
       .from(TABLES.CLIENTS)
       .delete()
@@ -77,6 +141,9 @@ export class DatabaseService {
 
   // Danışman işlemleri
   static async getConsultants() {
+    // Authentication kontrolü
+    // await this.checkAuthentication();
+    
     const { data, error } = await supabase
       .from(TABLES.CONSULTANTS)
       .select('*')
@@ -493,6 +560,9 @@ export class DatabaseService {
   // Danışman atama işlemleri
   static async assignConsultantToClient(consultantId, clientId) {
     try {
+      // Authentication kontrolü
+      // await this.checkAuthentication();
+      
       console.log(`🔄 Danışman ataması yapılıyor: Consultant ID: ${consultantId}, Client ID: ${clientId}`);
       
       // Müşteriye danışman ata
@@ -504,6 +574,31 @@ export class DatabaseService {
       
       if (error) throw error
       
+      // Müşteri ve danışman bilgilerini al
+      const client = data[0];
+      const { data: consultantData } = await supabase
+        .from(TABLES.CONSULTANTS)
+        .select('name, email')
+        .eq('id', consultantId)
+        .single();
+      
+      // Otomatik bildirim oluştur
+      try {
+        await this.createNotification({
+          title: 'Danışman Atandı',
+          message: `${client.name} müşterisine ${consultantData?.name || 'Danışman'} atandı`,
+          type: 'success',
+          category: 'assignment',
+          related_id: clientId,
+          related_type: 'client'
+        });
+        
+        console.log('✅ Danışman atama bildirimi oluşturuldu');
+      } catch (notificationError) {
+        console.warn('⚠️ Bildirim oluşturulamadı:', notificationError);
+        // Bildirim hatası ana işlemi etkilemesin
+      }
+      
       console.log('✅ Danışman başarıyla atandı:', data[0]);
       return data[0]
     } catch (error) {
@@ -514,6 +609,9 @@ export class DatabaseService {
 
   static async removeConsultantFromClient(clientId) {
     try {
+      // Authentication kontrolü
+      // await this.checkAuthentication();
+      
       console.log(`🔄 Danışman ataması kaldırılıyor: Client ID: ${clientId}`);
       
       // Müşteriden danışman atamasını kaldır
@@ -524,6 +622,23 @@ export class DatabaseService {
         .select()
       
       if (error) throw error
+      
+      // Otomatik bildirim oluştur
+      try {
+        await this.createNotification({
+          title: 'Danışman Ataması Kaldırıldı',
+          message: `${data[0].name} müşterisinden danışman ataması kaldırıldı`,
+          type: 'warning',
+          category: 'assignment',
+          related_id: clientId,
+          related_type: 'client'
+        });
+        
+        console.log('✅ Danışman kaldırma bildirimi oluşturuldu');
+      } catch (notificationError) {
+        console.warn('⚠️ Bildirim oluşturulamadı:', notificationError);
+        // Bildirim hatası ana işlemi etkilemesin
+      }
       
       console.log('✅ Danışman ataması kaldırıldı:', data[0]);
       return data[0]
@@ -708,13 +823,36 @@ export class DatabaseService {
         fileSize: file.size,
         fileType: file.type,
         clientId: clientId,
-        documentInfo: documentInfo
+        documentInfo: documentInfo,
+        environment: import.meta.env.MODE,
+        isProduction: window.location.hostname === 'admin.ayajourneys.com'
       });
 
       // Supabase bağlantı kontrolü
       if (!supabase) {
         throw new Error('Supabase bağlantısı kurulamadı. Lütfen environment değişkenlerini kontrol edin.');
       }
+
+      // Environment değişkenlerini kontrol et
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.error('❌ Environment değişkenleri eksik:', { 
+          supabaseUrl: supabaseUrl ? 'Mevcut' : 'Eksik', 
+          supabaseAnonKey: supabaseAnonKey ? 'Mevcut' : 'Eksik',
+          environment: import.meta.env.MODE,
+          hostname: window.location.hostname
+        });
+        
+        if (window.location.hostname === 'admin.ayajourneys.com') {
+          throw new Error('Production ortamında Supabase environment değişkenleri eksik. Netlify ayarlarını kontrol edin.');
+        } else {
+          throw new Error('Supabase URL ve Anon Key eksik. Lütfen .env.local dosyasını oluşturun.');
+        }
+      }
+
+      console.log('✅ Environment değişkenleri mevcut');
 
       // Storage bucket kontrolü
       console.log('🔍 Storage bucket kontrol ediliyor...');
@@ -825,15 +963,25 @@ export class DatabaseService {
         userMessage = 'Storage bucket bulunamadı. Lütfen Supabase Dashboard\'da Storage > Buckets bölümünden "documents" bucket\'ını oluşturun.';
       } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
         userMessage = 'Dosya yükleme izni yok. Lütfen Supabase RLS (Row Level Security) ayarlarını kontrol edin.';
+      } else if (error.message.includes('row-level security') || error.message.includes('violates row-level security')) {
+        userMessage = 'RLS (Row Level Security) politikası hatası. Supabase Dashboard\'da Authentication > Policies bölümünden RLS politikalarını düzeltin.';
       } else if (error.message.includes('network') || error.message.includes('fetch')) {
         userMessage = 'Ağ bağlantısı hatası. Lütfen internet bağlantınızı ve Supabase URL\'ini kontrol edin.';
       } else if (error.message.includes('environment')) {
-        userMessage = 'Environment değişkenleri eksik. Lütfen .env.local dosyasında VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY değerlerini kontrol edin.';
+        if (window.location.hostname === 'admin.ayajourneys.com') {
+          userMessage = 'Production ortamında environment değişkenleri eksik. Netlify Dashboard\'da Environment Variables bölümünü kontrol edin.';
+        } else {
+          userMessage = 'Environment değişkenleri eksik. Lütfen .env.local dosyasında VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY değerlerini kontrol edin.';
+        }
+      } else if (error.message.includes('Production ortamında')) {
+        userMessage = 'Production ortamında Supabase ayarları eksik. Netlify Dashboard\'da Environment Variables bölümünü kontrol edin.';
       }
       
       return { 
         success: false, 
-        error: userMessage 
+        error: userMessage,
+        details: error.message,
+        code: error.code || 'UNKNOWN_ERROR'
       };
     }
   }
@@ -1241,6 +1389,24 @@ export class DatabaseService {
         }
         
         console.log('✅ Atamalar başarıyla eklendi')
+      }
+      
+      // Otomatik bildirim oluştur
+      try {
+        const consultantNames = assignedConsultants.map(c => c.name).join(', ');
+        await this.createNotification({
+          title: 'Yeni Görev Oluşturuldu',
+          message: `${taskData.title} görevi ${consultantNames ? consultantNames + ' danışmanlarına' : 'sisteme'} atandı`,
+          type: 'info',
+          category: 'task',
+          related_id: task.id,
+          related_type: 'task'
+        });
+        
+        console.log('✅ Yeni görev bildirimi oluşturuldu');
+      } catch (notificationError) {
+        console.warn('⚠️ Bildirim oluşturulamadı:', notificationError);
+        // Bildirim hatası ana işlemi etkilemesin
       }
       
       return task
@@ -1666,12 +1832,12 @@ export class DatabaseService {
 
   static async updateCompanySetting(key, value) {
     try {
-      console.log(`🔧 Tek ayar güncelleniyor: ${key} = ${value}`);
+      console.log(`🔧 Company setting güncelleniyor: ${key} = ${value}`);
       
+      // Veri türünü belirle
       let settingValue = value;
       let settingType = 'string';
       
-      // Veri türünü belirle
       if (typeof value === 'number') {
         settingType = 'number';
         settingValue = value.toString();
@@ -1683,25 +1849,28 @@ export class DatabaseService {
         settingValue = JSON.stringify(value);
       }
       
+      const updateData = {
+        setting_key: key,
+        setting_value: settingValue,
+        setting_type: settingType,
+        category: 'company'
+      };
+      
       const { data, error } = await supabase
         .from(TABLES.COMPANY_SETTINGS)
-        .upsert({
-          setting_key: key,
-          setting_value: settingValue,
-          setting_type: settingType,
-          category: 'company'
-        }, {
+        .upsert(updateData, {
           onConflict: 'setting_key'
         })
-        .select();
-      
+        .select()
+        .single();
+
       if (error) {
         console.error(`❌ ${key} ayarı güncellenemedi:`, error);
         throw error;
       }
       
-      console.log(`✅ ${key} ayarı güncellendi:`, data[0]);
-      return data[0];
+      console.log(`✅ ${key} ayarı başarıyla güncellendi`);
+      return data;
       
     } catch (error) {
       console.error(`💥 ${key} ayarı güncelleme hatası:`, error);
@@ -2087,15 +2256,18 @@ export class DatabaseService {
   // Bildirimleri okundu olarak işaretle
   static async markNotificationsAsRead(userId) {
     try {
+      // Authentication kontrolü
+      // await this.checkAuthentication();
+      
       console.log('📖 Kullanıcının bildirimleri okundu olarak işaretleniyor:', userId);
       
       const { data, error } = await supabase
-        .from('task_assignments')
+        .from('notifications')
         .update({
           is_read: true,
-          read_at: new Date().toISOString()
+          updated_at: new Date().toISOString()
         })
-        .eq('consultant_id', userId)
+        .eq('user_id', userId)
         .eq('is_read', false); // Sadece okunmamış olanları güncelle
       
       if (error) {
@@ -2114,10 +2286,13 @@ export class DatabaseService {
   // Kullanıcının okunmamış bildirim sayısını getir
   static async getUnreadNotificationCount(userId) {
     try {
+      // Authentication kontrolü
+      // await this.checkAuthentication();
+      
       const { count, error } = await supabase
-        .from('task_assignments')
+        .from('notifications')
         .select('*', { count: 'exact', head: true })
-        .eq('consultant_id', userId)
+        .eq('user_id', userId)
         .eq('is_read', false);
       
       if (error) {
@@ -2130,5 +2305,51 @@ export class DatabaseService {
       console.error('❌ getUnreadNotificationCount hatası:', error);
       return 0;
     }
+  }
+
+  // Bildirim oluştur
+  static async createNotification(notificationData) {
+    try {
+      // Authentication kontrolü
+      // await this.checkAuthentication();
+      
+      console.log('📢 Bildirim oluşturuluyor:', notificationData);
+      
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: notificationData.user_id || 1, // Varsayılan admin user_id
+          title: notificationData.title,
+          message: notificationData.message,
+          type: notificationData.type || 'info',
+          category: notificationData.category || 'general',
+          related_id: notificationData.related_id,
+          related_type: notificationData.related_type,
+          is_read: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select();
+      
+      if (error) {
+        console.error('❌ Bildirim oluşturulurken hata:', error);
+        throw error;
+      }
+      
+      console.log('✅ Bildirim başarıyla oluşturuldu:', data[0]);
+      return data[0];
+    } catch (error) {
+      console.error('❌ createNotification hatası:', error);
+      throw error;
+    }
+  }
+
+  // Utility functions
+  static async getStorageUrl(path) {
+    const { data } = supabase.storage
+      .from('documents')
+      .getPublicUrl(path);
+
+    return data.publicUrl;
   }
 }

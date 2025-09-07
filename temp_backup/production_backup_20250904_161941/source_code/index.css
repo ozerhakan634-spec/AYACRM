@@ -1,0 +1,128 @@
+@import url('./assets/stylesheet.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.custom-title-font {
+  font-family: 'turkish_microgrammaregular', Arial, sans-serif !important;
+}
+
+@layer base {
+  * {
+    font-family: 'Gilroy', sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+  }
+}
+
+/* Glass Morphing Transition Animasyonları */
+@layer utilities {
+  /* Glass Wave'lerin form şekline dönüşmesi */
+  .glass-morph-to-form {
+    animation: morphToForm 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  
+  /* Login formunun glass'dan çıkması */
+  .form-emerge-from-glass {
+    animation: emergeFromGlass 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  
+  /* Reverse morphing - form'dan wave'lere dönüş */
+  .glass-morph-to-waves {
+    animation: morphToWaves 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  
+  /* Formun glass'a geri karışması */
+  .form-dissolve-to-glass {
+    animation: dissolveToGlass 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+}
+
+@keyframes morphToForm {
+  0% {
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0 95%);
+    border-radius: 0;
+    transform: scale(1);
+  }
+  50% {
+    clip-path: polygon(10% 10%, 90% 10%, 90% 85%, 10% 90%);
+    border-radius: 20px;
+    transform: scale(0.95);
+  }
+  100% {
+    clip-path: polygon(25% 25%, 75% 25%, 75% 75%, 25% 75%);
+    border-radius: 32px;
+    transform: scale(0.8) translate(0, 10%);
+  }
+}
+
+@keyframes emergeFromGlass {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+    backdrop-filter: blur(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    backdrop-filter: blur(0px);
+  }
+}
+
+@keyframes morphToWaves {
+  0% {
+    clip-path: polygon(25% 25%, 75% 25%, 75% 75%, 25% 75%);
+    border-radius: 32px;
+    transform: scale(0.8) translate(0, 10%);
+  }
+  50% {
+    clip-path: polygon(10% 10%, 90% 10%, 90% 85%, 10% 90%);
+    border-radius: 20px;
+    transform: scale(0.95);
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0 95%);
+    border-radius: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes dissolveToGlass {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+    backdrop-filter: blur(20px);
+  }
+}

@@ -96,6 +96,57 @@ export class AuthService {
     return isLoggedIn && user !== null && user.has_credentials === true;
   }
 
+  static async getCompanySettings() {
+    try {
+      // Veritabanından şirket ayarlarını al
+      const { data: settings, error } = await DatabaseService.supabase
+        .from('company_settings')
+        .select('*')
+        .eq('is_active', true)
+        .limit(10);
+      
+      if (error) {
+        console.error('Şirket ayarları alınırken hata:', error);
+        return {
+          company_name: 'AYA Journey CRM',
+          logo_url: null
+        };
+      }
+      
+      // Ayarları objeye çevir
+      const companySettings = {};
+      if (settings && settings.length > 0) {
+        settings.forEach(setting => {
+          companySettings[setting.setting_key] = setting.setting_value;
+        });
+      }
+      
+      // Logo URL'ini oluştur
+      let logoUrl = null;
+      if (companySettings.company_logo) {
+        const { data: logoData } = await DatabaseService.supabase
+          .storage
+          .from('company-logos')
+          .getPublicUrl(companySettings.company_logo);
+        logoUrl = logoData?.publicUrl;
+      }
+      
+      return {
+        company_name: companySettings.company_name || 'AYA Journey CRM',
+        logo_url: logoUrl,
+        company_email: companySettings.company_email,
+        company_phone: companySettings.company_phone,
+        company_address: companySettings.company_address
+      };
+    } catch (error) {
+      console.error('Şirket ayarları alınırken hata:', error);
+      return {
+        company_name: 'AYA Journey CRM',
+        logo_url: null
+      };
+    }
+  }
+
   static hasPermission(permission) {
     const user = this.getCurrentUser();
     
