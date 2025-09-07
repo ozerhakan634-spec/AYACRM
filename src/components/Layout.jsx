@@ -44,7 +44,6 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
     { name: 'Takvim', href: '/dashboard/calendar', icon: Calendar },
     { name: 'Raporlar', href: '/dashboard/reports', icon: BarChart3 },
     { name: 'Finans', href: '/dashboard/finance', icon: DollarSign },
-    { name: 'Destek', href: '/dashboard/support', icon: MessageCircle },
     { name: 'Destek Yönetimi', href: '/dashboard/support-management', icon: MessageCircle },
     { name: 'Ayarlar', href: '/dashboard/settings', icon: Settings },
   ];
@@ -72,8 +71,6 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
         return currentUser.permissions.reports;
       case '/dashboard/finance':
         return currentUser.permissions.finance;
-      case '/dashboard/support':
-        return currentUser.permissions.support;
       case '/dashboard/support-management':
         return currentUser.permissions.support_management; // Destek yönetimi izni gerekli
       case '/dashboard/settings':
