@@ -92,6 +92,18 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
     loadCompanySettings();
   }, []);
 
+  // Sayfa her yüklendiğinde şirket ayarlarını yenile
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadCompanySettings();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   const loadCompanySettings = async () => {
     try {
       console.log('🔍 Layout: Şirket ayarları yükleniyor...');
@@ -102,9 +114,13 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
         setCompanyName(settings.company_name || 'AYA Journey CRM');
         if (settings.logo_url) {
           console.log('🖼️ Layout: Logo URL bulundu:', settings.logo_url);
-          setCompanyLogo(settings.logo_url);
+          // Logo URL'ini cache-busting ile güncelle
+          const logoUrlWithCache = `${settings.logo_url}?t=${Date.now()}`;
+          setCompanyLogo(logoUrlWithCache);
+          console.log('🔄 Layout: Logo URL cache-busting ile güncellendi:', logoUrlWithCache);
         } else {
           console.log('⚠️ Layout: Logo URL bulunamadı');
+          setCompanyLogo(null);
         }
       }
     } catch (error) {
