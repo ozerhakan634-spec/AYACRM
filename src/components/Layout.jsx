@@ -341,9 +341,10 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
       {/* Profile Modal */}
       {showProfileModal && (
         <ProfileModal
-          user={userData}
+          isOpen={showProfileModal}
+          currentUser={userData}
           onClose={() => setShowProfileModal(false)}
-          onUpdate={handleUserUpdate}
+          onUserUpdate={handleUserUpdate}
         />
       )}
     </div>
