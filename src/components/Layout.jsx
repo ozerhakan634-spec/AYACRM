@@ -39,13 +39,13 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Müşteriler', href: '/dashboard/clients', icon: Users },
+    { name: 'Belgeler', href: '/dashboard/documents', icon: FolderOpen },
+    { name: 'Görevler', href: '/dashboard/tasks', icon: CheckSquare },
+    { name: 'Takvim', href: '/dashboard/calendar', icon: Calendar },
+    { name: 'Finans', href: '/dashboard/finance', icon: DollarSign },
+    { name: 'Raporlar', href: '/dashboard/reports', icon: BarChart3 },
     { name: 'Danışmanlar', href: '/dashboard/consultants', icon: Users },
     { name: 'Takım Yönetimi', href: '/dashboard/team-management', icon: Users },
-    { name: 'Görevler', href: '/dashboard/tasks', icon: CheckSquare },
-    { name: 'Dokümanlar', href: '/dashboard/documents', icon: FolderOpen },
-    { name: 'Takvim', href: '/dashboard/calendar', icon: Calendar },
-    { name: 'Raporlar', href: '/dashboard/reports', icon: BarChart3 },
-    { name: 'Finans', href: '/dashboard/finance', icon: DollarSign },
     { name: 'Destek Yönetimi', href: '/dashboard/support-management', icon: MessageCircle },
     { name: 'Ayarlar', href: '/dashboard/settings', icon: Settings },
   ];
