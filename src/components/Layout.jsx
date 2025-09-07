@@ -15,7 +15,9 @@ import {
   Bell,
   DollarSign,
   BarChart3,
-  MessageCircle
+  MessageCircle,
+  CheckSquare,
+  FolderOpen
 } from 'lucide-react';
 import { DatabaseService } from '../services/database';
 import { AuthService } from '../services/auth';
@@ -39,8 +41,8 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
     { name: 'Müşteriler', href: '/dashboard/clients', icon: Users },
     { name: 'Danışmanlar', href: '/dashboard/consultants', icon: Users },
     { name: 'Takım Yönetimi', href: '/dashboard/team-management', icon: Users },
-    { name: 'Görevler', href: '/dashboard/tasks', icon: FileText },
-    { name: 'Dokümanlar', href: '/dashboard/documents', icon: FileText },
+    { name: 'Görevler', href: '/dashboard/tasks', icon: CheckSquare },
+    { name: 'Dokümanlar', href: '/dashboard/documents', icon: FolderOpen },
     { name: 'Takvim', href: '/dashboard/calendar', icon: Calendar },
     { name: 'Raporlar', href: '/dashboard/reports', icon: BarChart3 },
     { name: 'Finans', href: '/dashboard/finance', icon: DollarSign },
