@@ -121,15 +121,8 @@ export class AuthService {
         });
       }
       
-      // Logo URL'ini oluştur
-      let logoUrl = null;
-      if (companySettings.company_logo) {
-        const { data: logoData } = await DatabaseService.supabase
-          .storage
-          .from('company-logos')
-          .getPublicUrl(companySettings.company_logo);
-        logoUrl = logoData?.publicUrl;
-      }
+      // Logo URL'ini al
+      let logoUrl = companySettings.company_logo_url || null;
       
       return {
         company_name: companySettings.company_name || 'AYA Journey CRM',
