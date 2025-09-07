@@ -98,43 +98,21 @@ export class AuthService {
 
   static async getCompanySettings() {
     try {
-      // Veritabanından şirket ayarlarını al
-      const { data: settings, error } = await DatabaseService.supabase
-        .from('company_settings')
-        .select('*')
-        .eq('is_active', true)
-        .limit(10);
+      console.log('🔍 AuthService: Şirket ayarları alınıyor...');
       
-      if (error) {
-        console.error('Şirket ayarları alınırken hata:', error);
-        return {
-          company_name: 'AYA Journey CRM',
-          logo_url: null
-        };
-      }
-      
-      // Ayarları objeye çevir
-      const companySettings = {};
-      if (settings && settings.length > 0) {
-        settings.forEach(setting => {
-          companySettings[setting.setting_key] = setting.setting_value;
-        });
-      }
-      
-      // Logo URL'ini al
-      let logoUrl = companySettings.company_logo_url || null;
-      console.log('🔍 AuthService: Company settings:', companySettings);
-      console.log('🖼️ AuthService: Logo URL:', logoUrl);
+      // DatabaseService'ten direkt ayarları al
+      const settings = await DatabaseService.getCompanySettings();
+      console.log('📋 AuthService: DatabaseService sonucu:', settings);
       
       return {
-        company_name: companySettings.company_name || 'AYA Journey CRM',
-        logo_url: logoUrl,
-        company_email: companySettings.company_email,
-        company_phone: companySettings.company_phone,
-        company_address: companySettings.company_address
+        company_name: settings.company_name || 'AYA Journey CRM',
+        logo_url: settings.company_logo_url || null,
+        company_email: settings.company_email,
+        company_phone: settings.company_phone,
+        company_address: settings.company_address
       };
     } catch (error) {
-      console.error('Şirket ayarları alınırken hata:', error);
+      console.error('❌ AuthService: Genel hata:', error);
       return {
         company_name: 'AYA Journey CRM',
         logo_url: null

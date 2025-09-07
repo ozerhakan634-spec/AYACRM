@@ -29,6 +29,7 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
   const [userData, setUserData] = useState(currentUser);
   const [companyLogo, setCompanyLogo] = useState(null);
   const [companyName, setCompanyName] = useState('AYA Journey CRM');
+  const [logoLoading, setLogoLoading] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToastContext();
@@ -92,39 +93,36 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
     loadCompanySettings();
   }, []);
 
-  // Sayfa her yüklendiğinde şirket ayarlarını yenile
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        loadCompanySettings();
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
-
   const loadCompanySettings = async () => {
     try {
-      console.log('🔍 Layout: Şirket ayarları yükleniyor...');
+      setLogoLoading(true);
+      console.log('🔍 Logo yükleniyor...');
+      
+      // Test için direkt logo URL'ini kullan
+      const testLogoUrl = 'https://hyxdpeeoultnxyotncdd.supabase.co/storage/v1/object/public/company-logos/logo.svg';
+      console.log('🧪 Test logo URL:', testLogoUrl);
+      setCompanyLogo(testLogoUrl);
+      setCompanyName('AYA Journey CRM');
+      
+      // Gerçek ayarları da yükle
       const settings = await AuthService.getCompanySettings();
-      console.log('📋 Layout: Şirket ayarları:', settings);
+      console.log('📋 Şirket ayarları:', settings);
       
       if (settings) {
         setCompanyName(settings.company_name || 'AYA Journey CRM');
-        if (settings.logo_url) {
-          console.log('🖼️ Layout: Logo URL bulundu:', settings.logo_url);
-          // Logo URL'ini cache-busting ile güncelle
-          const logoUrlWithCache = `${settings.logo_url}?t=${Date.now()}`;
-          setCompanyLogo(logoUrlWithCache);
-          console.log('🔄 Layout: Logo URL cache-busting ile güncellendi:', logoUrlWithCache);
+        
+        if (settings.logo_url && settings.logo_url.trim() !== '') {
+          console.log('🖼️ Logo URL bulundu:', settings.logo_url);
+          setCompanyLogo(settings.logo_url);
         } else {
-          console.log('⚠️ Layout: Logo URL bulunamadı');
-          setCompanyLogo(null);
+          console.log('⚠️ Logo URL bulunamadı, test URL kullanılıyor');
         }
       }
     } catch (error) {
-      console.error('❌ Layout: Şirket ayarları yüklenemedi:', error);
+      console.error('❌ Logo yükleme hatası:', error);
+      setCompanyLogo(null);
+    } finally {
+      setLogoLoading(false);
     }
   };
 
@@ -164,22 +162,25 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
       }`}>
         <div className="flex items-center justify-between h-16 px-6 py-3 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-center space-x-3 w-full">
-            {companyLogo ? (
-              <div className="flex items-center justify-center w-full py-2">
-                <div className="h-12 w-auto max-w-[180px] flex items-center justify-center p-2">
-                  <img 
-                    src={companyLogo} 
-                    alt={companyName} 
-                    className="h-full w-auto object-contain"
-                    style={{ maxHeight: '44px', maxWidth: '170px' }}
-                    onLoad={() => console.log('✅ Layout: Logo başarıyla yüklendi:', companyLogo)}
-                    onError={(e) => {
-                      console.error('❌ Layout: Logo yüklenemedi:', companyLogo, e);
-                      e.target.style.display = 'none';
-                      e.target.parentElement.nextElementSibling.style.display = 'block';
-                    }}
-                  />
+            {logoLoading ? (
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center animate-pulse">
+                  <span className="text-gray-400 text-sm">...</span>
                 </div>
+                <span className="ml-3 text-xl font-semibold text-gray-900">{companyName}</span>
+              </div>
+            ) : companyLogo ? (
+              <div className="flex items-center justify-center w-full py-2">
+                <img 
+                  src={companyLogo} 
+                  alt={companyName} 
+                  className="h-10 w-auto max-w-[160px] object-contain"
+                  onLoad={() => console.log('✅ Logo başarıyla yüklendi!')}
+                  onError={(e) => {
+                    console.error('❌ Logo yüklenemedi:', companyLogo);
+                    setCompanyLogo(null);
+                  }}
+                />
               </div>
             ) : (
               <div className="flex items-center">
