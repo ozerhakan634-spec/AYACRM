@@ -166,25 +166,25 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
                 <span className="ml-3 text-xl font-semibold text-gray-900">{companyName}</span>
               </div>
             ) : companyLogo ? (
-              <div className="flex items-center justify-center w-full py-2">
+              <Link to="/dashboard" className="flex items-center justify-center w-full py-2 hover:opacity-80 transition-opacity">
                 <img 
                   src={companyLogo} 
                   alt={companyName} 
-                  className="h-10 w-auto max-w-[160px] object-contain"
+                  className="h-10 w-auto max-w-[160px] object-contain cursor-pointer"
                   onLoad={() => console.log('✅ Logo başarıyla yüklendi!')}
                   onError={(e) => {
                     console.error('❌ Logo yüklenemedi:', companyLogo);
                     setCompanyLogo(null);
                   }}
                 />
-              </div>
+              </Link>
             ) : (
-              <div className="flex items-center">
+              <Link to="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-lg">A</span>
                 </div>
                 <span className="ml-3 text-xl font-semibold text-gray-900">{companyName}</span>
-              </div>
+              </Link>
             )}
           </div>
           <button
