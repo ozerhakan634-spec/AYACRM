@@ -123,6 +123,8 @@ export class AuthService {
       
       // Logo URL'ini al
       let logoUrl = companySettings.company_logo_url || null;
+      console.log('🔍 AuthService: Company settings:', companySettings);
+      console.log('🖼️ AuthService: Logo URL:', logoUrl);
       
       return {
         company_name: companySettings.company_name || 'AYA Journey CRM',

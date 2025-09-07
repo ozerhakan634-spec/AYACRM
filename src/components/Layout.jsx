@@ -94,15 +94,21 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
 
   const loadCompanySettings = async () => {
     try {
+      console.log('🔍 Layout: Şirket ayarları yükleniyor...');
       const settings = await AuthService.getCompanySettings();
+      console.log('📋 Layout: Şirket ayarları:', settings);
+      
       if (settings) {
         setCompanyName(settings.company_name || 'AYA Journey CRM');
         if (settings.logo_url) {
+          console.log('🖼️ Layout: Logo URL bulundu:', settings.logo_url);
           setCompanyLogo(settings.logo_url);
+        } else {
+          console.log('⚠️ Layout: Logo URL bulunamadı');
         }
       }
     } catch (error) {
-      console.error('Şirket ayarları yüklenemedi:', error);
+      console.error('❌ Layout: Şirket ayarları yüklenemedi:', error);
     }
   };
 
@@ -150,7 +156,9 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
                     alt={companyName} 
                     className="h-full w-auto object-contain"
                     style={{ maxHeight: '44px', maxWidth: '170px' }}
+                    onLoad={() => console.log('✅ Layout: Logo başarıyla yüklendi:', companyLogo)}
                     onError={(e) => {
+                      console.error('❌ Layout: Logo yüklenemedi:', companyLogo, e);
                       e.target.style.display = 'none';
                       e.target.parentElement.nextElementSibling.style.display = 'block';
                     }}
