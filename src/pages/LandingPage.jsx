@@ -221,11 +221,29 @@ const LandingPage = () => {
       {/* İlk Ekran - Tam Sayfa */}
       <div className="h-screen relative flex flex-col">
 
-        {/* İletişim Butonu - Sağ Üst Köşe */}
-        <div className="absolute top-6 right-6 z-20">
+        {/* Üst Bar - Beyaz Arka Plan */}
+        <div className="absolute top-0 left-0 right-0 h-20 bg-white/90 backdrop-blur-sm z-10"></div>
+
+        {/* Logo - Sol Üst */}
+        <div className="absolute top-6 left-6 z-20">
+          <img 
+            src="/images/visamod-logo.svg" 
+            alt="VisaMod Logo" 
+            className="h-10 w-auto"
+          />
+        </div>
+
+        {/* Üst Sağ Butonlar */}
+        <div className="absolute top-6 right-6 z-20 flex gap-3">
+          <button 
+            onClick={handleLogin}
+            className="text-sm text-gray-600 hover:text-gray-800 font-medium px-4 py-2 transition-colors duration-200"
+          >
+            Giriş
+          </button>
           <button 
             onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-            className="text-sm text-gray-600 hover:text-gray-800 font-medium px-4 py-2 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 transition-all duration-200"
+            className="text-sm text-gray-600 hover:text-gray-800 font-medium px-4 py-2 transition-colors duration-200"
           >
             İletişim
           </button>
@@ -367,12 +385,12 @@ const LandingPage = () => {
       <div className="relative z-10 flex-1 flex items-center justify-center">
         <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Main content */}
-          <main className="text-center">
-                <h1 className="text-5xl sm:text-6xl md:text-7xl text-gray-900 leading-tight custom-title-font">
+          <main className="text-center mt-32">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl text-gray-900 leading-tight custom-title-font">
                   <span className="block">Vize Danışmanlık</span>
                   <span className="block">Yönetim Sistemi</span>
                 </h1>
-                <p className="mt-8 text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
                   Müşterilerinizi, danışmanlarınızı ve vize süreçlerinizi tek platformda yönetin. 
                   Basit, etkili ve güvenilir.
                 </p>
@@ -485,12 +503,6 @@ const LandingPage = () => {
           </button>
         </div>
         
-        {/* Footer - Sayfanın altında sabit */}
-        <div className="absolute bottom-4 left-0 right-0 text-center">
-          <p className="text-gray-300 text-sm leading-none">
-            &copy; 2025 Vize Danışmanlık Yönetim Sistemi. Tüm hakları saklıdır.
-          </p>
-        </div>
       </div>
       </div>
 
@@ -581,8 +593,13 @@ const LandingPage = () => {
         
         {/* Footer - Sayfanın tam en altında */}
         <div className="py-8 text-center bg-white/20 backdrop-blur-sm border-t border-white/30">
+          <p className="text-gray-600 text-sm font-medium mb-2">
+            info@visamod.com
+          </p>
           <p className="text-gray-600 text-sm">
-            &copy; 2025 Vize Danışmanlık Yönetim Sistemi. Tüm hakları saklıdır.
+            &copy; 2025 Visamod Müşteri Yönetim Sistemi. Tüm hakları saklıdır.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span className="underline cursor-pointer hover:text-gray-800 transition-colors">Gizlilik Politikası</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span className="underline cursor-pointer hover:text-gray-800 transition-colors">Kişisel Verilerin Korunması ve Gizlilik Politikası (KVKK)</span>
           </p>
         </div>
       </div>

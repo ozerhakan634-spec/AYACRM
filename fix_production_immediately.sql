@@ -74,3 +74,8 @@ ON CONFLICT DO NOTHING;
 SELECT 'Production sistemi düzeltildi! RLS devre dışı, veriler görünür.' as message;
 
 
+
+
+
+
+

@@ -187,6 +187,8 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
               </Link>
             )}
           </div>
+          
+          {/* Mobile close button */}
           <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden p-1 rounded-md text-gray-400 hover:text-gray-600"
@@ -224,7 +226,7 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
 
         {/* Kullanıcı bilgileri ve ayarlar - en altta */}
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200">
-          {/* Kullanıcı Bilgileri */}
+          {/* Sistem Yöneticisi Bölümü */}
           <div className="mb-3 px-3 py-2 bg-gray-50 rounded-lg">
             <div className="flex items-center space-x-3">
               <button
@@ -240,7 +242,7 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
                   />
                 ) : (
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <UserCircle size={16} className="text-blue-600" />
+                    <span className="text-blue-600 font-bold text-xs">AYA</span>
                   </div>
                 )}
               </button>
@@ -250,10 +252,10 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
                   className="text-left w-full hover:text-blue-600 transition-colors"
                 >
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    {userData?.name || 'Kullanıcı'}
+                    Sistem Yöneticisi
                   </p>
                   <p className="text-xs text-gray-500 truncate">
-                    {userData?.department || 'Departman'}
+                    Yönetim
                   </p>
                 </button>
               </div>
@@ -268,44 +270,40 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
           </div>
 
           {/* Destek Butonu */}
-          {(currentUser?.permissions?.settings || currentUser?.permissions?.support) && (
-            <Link
-              to="/dashboard/support"
-              className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                location.pathname === '/dashboard/support'
-                  ? 'bg-gray-100 text-gray-800'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+          <Link
+            to="/dashboard/support"
+            className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 mb-1 ${
+              location.pathname === '/dashboard/support'
+                ? 'bg-gray-100 text-gray-800'
+                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+          >
+            <HelpCircle 
+              size={20} 
+              className={`mr-3 ${
+                location.pathname === '/dashboard/support' ? 'text-gray-600' : 'text-gray-400 group-hover:text-gray-500'
               }`}
-            >
-              <HelpCircle 
-                size={20} 
-                className={`mr-3 ${
-                  location.pathname === '/dashboard/support' ? 'text-gray-600' : 'text-gray-400 group-hover:text-gray-500'
-                }`}
-              />
-              Destek
-            </Link>
-          )}
+            />
+            Destek
+          </Link>
 
           {/* Ayarlar Butonu */}
-          {currentUser?.permissions?.settings && (
-            <Link
-              to="/dashboard/settings"
-              className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                location.pathname === '/dashboard/settings'
-                  ? 'bg-gray-100 text-gray-800'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+          <Link
+            to="/dashboard/settings"
+            className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+              location.pathname === '/dashboard/settings'
+                ? 'bg-gray-100 text-gray-800'
+                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+          >
+            <Settings 
+              size={20} 
+              className={`mr-3 ${
+                location.pathname === '/dashboard/settings' ? 'text-gray-600' : 'text-gray-400 group-hover:text-gray-500'
               }`}
-            >
-              <Settings 
-                size={20} 
-                className={`mr-3 ${
-                  location.pathname === '/dashboard/settings' ? 'text-gray-600' : 'text-gray-400 group-hover:text-gray-500'
-                }`}
-              />
-              Ayarlar
-            </Link>
-          )}
+            />
+            Ayarlar
+          </Link>
         </div>
       </div>
 
@@ -325,7 +323,7 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
             {/* Spacer for mobile */}
             <div className="lg:hidden flex-1" />
 
-            {/* Bildirim Bell - en sağda */}
+            {/* Bildirim İkonu - Sağ tarafta */}
             <div className="flex items-center">
               <NotificationBell />
             </div>
