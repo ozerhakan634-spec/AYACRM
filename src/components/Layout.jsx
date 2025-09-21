@@ -219,7 +219,14 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
                       isActive ? 'text-gray-600' : 'text-gray-400 group-hover:text-gray-500'
                     }`}
                   />
-                  {item.name}
+                  <span className="flex items-center">
+                    {item.name}
+                    {item.name === 'AI Asistanı' && (
+                      <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                        BETA
+                      </span>
+                    )}
+                  </span>
                 </Link>
               );
             })}
