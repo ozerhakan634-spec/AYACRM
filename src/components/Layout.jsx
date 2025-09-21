@@ -41,11 +41,12 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
     { name: 'Belgeler', href: '/dashboard/documents', icon: FolderOpen },
     { name: 'Görevler', href: '/dashboard/tasks', icon: CheckSquare },
     { name: 'Takvim', href: '/dashboard/calendar', icon: Calendar },
+    { name: 'AI Asistanı', href: '/dashboard/chatbot', icon: MessageCircle },
     { name: 'Finans', href: '/dashboard/finance', icon: DollarSign },
     { name: 'Raporlar', href: '/dashboard/reports', icon: BarChart3 },
     { name: 'Danışmanlar', href: '/dashboard/consultants', icon: Users },
     { name: 'Takım Yönetimi', href: '/dashboard/team-management', icon: Users },
-    { name: 'Destek Yönetimi', href: '/dashboard/support-management', icon: MessageCircle },
+    { name: 'Destek Yönetimi', href: '/dashboard/support-management', icon: MessageSquare },
   ];
 
   // Kullanıcının izinlerine göre navigasyonu filtrele
