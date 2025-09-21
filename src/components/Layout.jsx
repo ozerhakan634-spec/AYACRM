@@ -74,6 +74,8 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
         return currentUser.permissions.finance;
       case '/dashboard/support-management':
         return currentUser.permissions.support_management; // Destek yönetimi izni gerekli
+      case '/dashboard/chatbot':
+        return true; // AI Asistanı herkese açık
       default:
         return false;
     }
