@@ -375,7 +375,7 @@ const Login = ({ onLogin }) => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2024 Vize CRM. Tüm hakları saklıdır.
+            © 2024 Vİsamod - Yönetim Sistemleri. Tüm hakları saklıdır.
           </p>
         </div>
       </div>
