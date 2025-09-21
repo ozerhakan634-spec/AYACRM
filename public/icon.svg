@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="katman_2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 306.76 259.56">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#linear-gradient-2);
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="63.44" y1="74.61" x2="243.32" y2="74.61" gradientUnits="userSpaceOnUse">
+      <stop offset=".09" stop-color="#2b194c"/>
+      <stop offset=".87" stop-color="#8062ef"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="0" y1="187.98" x2="306.76" y2="187.98" xlink:href="#linear-gradient"/>
+  </defs>
+  <g id="katman_1">
+    <g>
+      <path class="cls-2" d="M63.44,85.1L145.11,3.43c4.56-4.57,11.97-4.57,16.54,0l81.67,81.67c-12.86,37.31-48.26,64.12-89.95,64.12s-77.07-26.81-89.93-64.12Z"/>
+      <path class="cls-1" d="M303.33,161.65l-94.8,94.8c-4.14,4.14-10.87,4.14-15.02,0l-32.61-32.63c-4.15-4.15-10.88-4.15-15.03,0l-32.61,32.63c-4.15,4.14-10.88,4.14-15.03,0L3.43,161.65c-4.57-4.57-4.57-11.97,0-16.54l28.71-28.71c22.63,43.93,68.42,73.97,121.23,73.97s98.62-30.05,121.25-73.97l28.71,28.71c4.57,4.57,4.57,11.97,0,16.54Z"/>
+    </g>
+  </g>
+</svg>
