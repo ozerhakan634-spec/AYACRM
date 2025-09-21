@@ -419,7 +419,7 @@ const LandingPage = () => {
                 <div className="mt-16 flex justify-center">
                   <img 
                     src="/images/laptop-mockup.png" 
-                    alt="Vİsamod - Yönetim Sistemleri Mockup" 
+                    alt="Visamod - Yönetim Sistemleri Mockup" 
                     className="w-full h-auto"
                     style={{ maxWidth: '2048px' }}
                   />
