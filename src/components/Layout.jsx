@@ -222,7 +222,7 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
                   <span className="flex items-center">
                     {item.name}
                     {item.name === 'AI Asistanı' && (
-                      <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                      <span className="ml-2 text-xs font-medium text-gray-400">
                         BETA
                       </span>
                     )}
