@@ -23,7 +23,6 @@ import { DatabaseService } from '../services/database';
 import { AuthService } from '../services/auth';
 import { useToastContext } from './Toast';
 import ProfileModal from './ProfileModal';
-import NotificationBell from './NotificationBell';
 
 const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -323,10 +322,6 @@ const Layout = ({ children, currentUser, onLogout, onUserUpdate }) => {
             {/* Spacer for mobile */}
             <div className="lg:hidden flex-1" />
 
-            {/* Bildirim İkonu - Sağ tarafta */}
-            <div className="flex items-center">
-              <NotificationBell />
-            </div>
           </div>
         </header>
 
